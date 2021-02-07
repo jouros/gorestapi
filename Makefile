@@ -5,13 +5,15 @@ REPO_LOCAL=localhost/jouros
 REPO_PUBLIC=registry.hub.docker.com/jrcjoro1/gorestapi
 DOCKER_HUB=registry.hub.docker.com
 
+# use make build tag="TAG"
 .PHONY: build
 build:
-	podman build --format=docker --log-level=debug --tag $(REPO_PUBLIC):1.0 -f ./Dockerfile
+	podman build --format=docker --log-level=debug --tag $(REPO_PUBLIC):$(tag) -f ./Dockerfile
 
+# use make push tag="TAG"
 .PHONY: push
 push:
-	podman push --log-level=debug $(REPO_PUBLIC):1.0
+	podman push --log-level=debug $(REPO_PUBLIC):$(tag)
 
 
 .PHONY: test
