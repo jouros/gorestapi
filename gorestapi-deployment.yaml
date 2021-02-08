@@ -19,9 +19,5 @@ spec:
         livenessProbe:
           tcpSocket:
             port: 8080
-        readinessProbe:
-          tcpSocket:
-            host: localhost
-            port: 8080
         ports:
         - containerPort: 8080
