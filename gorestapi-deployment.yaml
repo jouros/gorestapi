@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gorestapi 
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: gorestapi 
+  template:
+    metadata:
+      labels:
+        app: gorestapi 
+    spec:
+      containers:
+      - name: gorestapi 
+        image: jrcjoro1/gorestapi:1.0 
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+        readinessProbe:
+          tcpSocket:
+            host: localhost
+            port: 8080
+        ports:
+        - containerPort: 8080
