@@ -75,3 +75,39 @@ Test from outside:
   Content-Length: 20
 
   {"hello":"Found me"}
+
+## Install haproxy-ingress ingress controller
+
+More info: https://github.com/jcmoraisjr/haproxy-ingress/tree/master/examples/deployment
+
+Label nodes 1-3 (I have 4 worker nodes):  
+  kubectl label node worker1 role=ingress-controller
+  node/worker1 labeled  
+  kubectl label node worker2 role=ingress-controller
+  node/worker2 labeled  
+  kubectl label node worker3 role=ingress-controller
+  node/worker3 labeled  
+
+Check labels: 
+kubectl get nodes --selector='role=ingress-controller'  
+NAME      STATUS   ROLES    AGE   VERSION  
+worker1   Ready    <none>   57d   v1.20.0  
+worker2   Ready    <none>   57d   v1.20.0  
+worker3   Ready    <none>   57d   v1.20.0  
+
+kubectl create ns ingress-controller  
+
+openssl req \  
+  -x509 -newkey rsa:2048 -nodes -days 365 \  
+  -keyout tls.key -out tls.crt -subj '/CN=localhost'  
+
+kubectl --namespace ingress-controller create secret tls tls-secret --cert=tls.crt --key=tls.key  
+
+rm -v tls.crt tls.key  
+
+kubectl apply -f haproxy-ingress-deployment.yaml  
+
+Check ingress-controller daemonset:  
+kubectl get daemonsets -n ingress-controller  
+NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR             AGE  
+haproxy-ingress   3         3         3       3            3           role=ingress-controller   70s  
