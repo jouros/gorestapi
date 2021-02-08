@@ -44,18 +44,18 @@ kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manife
 kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"  
 
 $ cat config.yaml  
-  apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    namespace: metallb-system
-    name: config
-  data:
-    config: |
-      address-pools:
-      - name: restapipool 
-        protocol: layer2
-        addresses:
-        - 10.0.1.245-10.0.1.250
+  apiVersion: v1  
+  kind: ConfigMap  
+  metadata:  
+    namespace: metallb-system  
+    name: config  
+  data:  
+    config: |  
+      address-pools:  
+      - name: restapipool   
+        protocol: layer2  
+        addresses:  
+        - 10.0.1.245-10.0.1.250  
 
 kubectl apply -f config.yaml  
 
@@ -73,5 +73,5 @@ Test from outside:
   Content-Type: application/json; charset=utf-8
   Date: Mon, 08 Feb 2021 13:56:31 GMT
   Content-Length: 20
-  
+
   {"hello":"Found me"}
