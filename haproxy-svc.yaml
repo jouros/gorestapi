@@ -2,13 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: haproxy-ingress-publicip
-  annotations:
-    service.citrix.com/frontend-ip: '185.55.177.199'
   labels:
     name: haproxy-ingress-publicip
   namespace: ingress-controller
 spec:
   externalTrafficPolicy: Local
+  loadBalancerIP: "10.0.1.248"
   type: LoadBalancer
   selector:
     run: haproxy-ingress
@@ -16,4 +15,4 @@ spec:
   - name: http
     port: 8080
     protocol: TCP
-    targetPort: 8080
+    targetPort: 80

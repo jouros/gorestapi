@@ -76,7 +76,7 @@ Test from outside:
 
   {"hello":"Found me"}
 
-## Install haproxy-ingress ingress controller
+## Install haproxy-ingress controller
 
 More info: https://github.com/jcmoraisjr/haproxy-ingress/tree/master/examples/deployment
 
@@ -110,4 +110,6 @@ kubectl apply -f haproxy-ingress-deployment.yaml
 Check ingress-controller daemonset:  
 kubectl get daemonsets -n ingress-controller  
 NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR             AGE  
-haproxy-ingress   3         3         3       3            3           role=ingress-controller   70s  
+haproxy-ingress   3         3         3       3            3           role=ingress-controller   70s 
+
+ 
