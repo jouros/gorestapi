@@ -4,6 +4,8 @@ My personal Go playground
 
 ## K8s installation:
 
+This K8s cluster is crio version from my other repo.  
+
 kubectl apply -f gorestapi-deployment.yaml  
 
 kubectl apply -f gorestapi-svc.yaml  
@@ -58,7 +60,8 @@ apiVersion: v1
         addresses:  
         - 10.0.1.245-10.0.1.250  
 ```
-Above config will give addr pool 245 - 250 to MetalLB and  
+Above config will give addr pool 245 - 250 to MetalLB
+
 kubectl apply -f config.yaml  
 
 
