@@ -112,4 +112,20 @@ kubectl get daemonsets -n ingress-controller
 NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR             AGE  
 haproxy-ingress   3         3         3       3            3           role=ingress-controller   70s 
 
- 
+kubectl apply -f haproxy-svc.yaml  
+
+kubectl apply -f gorestapi-ingress.yaml  
+
+Now we have MetalLB to give static IP 10.0.1.248 to Haproxy which is Watching for ingress class 'haproxy' to route traffic to restapi Pod port 8080.  
+
+Test from outside of K8s:  
+
+curl -i http://10.0.1.248:8080/ping  
+HTTP/1.1 200 OK  
+content-type: application/json; charset=utf-8  
+date: Tue, 09 Feb 2021 13:05:32 GMT  
+content-length: 20  
+strict-transport-security: max-age=15768000  
+
+{"hello":"Found me"}  
+
