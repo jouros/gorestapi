@@ -44,7 +44,8 @@ kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manife
 kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"  
 
 $ cat config.yaml  
-  apiVersion: v1  
+```
+apiVersion: v1  
   kind: ConfigMap  
   metadata:  
     namespace: metallb-system  
@@ -56,6 +57,7 @@ $ cat config.yaml
         protocol: layer2  
         addresses:  
         - 10.0.1.245-10.0.1.250  
+```
 
 kubectl apply -f config.yaml  
 
