@@ -4,7 +4,7 @@ My personal Go playground
 
 ## K8s installation:
 
-This K8s cluster is crio version from my other repo.  
+This K8s cluster is crio version from my other repo. Platform is Ubuntu 20.04 + KVM  
 
 kubectl apply -f gorestapi-deployment.yaml  
 
