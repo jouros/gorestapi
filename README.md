@@ -139,6 +139,8 @@ strict-transport-security: max-age=15768000
 
 ## Postgres DB installation
 
+Note! This is only for my playground, I'm not using persistent volumes here.  
+
 kubectl apply -f postgres-configmap.yaml  
 
 kubectl apply -f postgres-deployment-svc.yaml  
