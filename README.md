@@ -137,3 +137,21 @@ strict-transport-security: max-age=15768000
 
 {"hello":"Found me"}  
 
+## Postgres DB installation
+
+kubectl apply -f postgres-deployment-svc.yaml  
+
+Note! We have type: NodePort to access our db from host.  
+
+Check Postgres port:  
+
+kubectl get svc  
+postgres     NodePort    10.100.109.205   <none>        5432:32531/TCP   28m  
+
+Test db connection: https:  
+
+psql -h 10.0.1.204 -U admin --password -p 32531 omadb  
+Password:    
+omadb=# quit  
+
+
