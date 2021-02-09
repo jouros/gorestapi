@@ -1,8 +1,10 @@
 # gorestapi
 
-My personal Go playground
+My personal Go playground.  
 
-## K8s installation:
+REST api written in Go and K8s deployment.  
+
+## K8s installation
 
 This K8s cluster is crio version from my other repo. Platform is Ubuntu 20.04 + KVM  
 
@@ -33,7 +35,7 @@ Content-Length: 20
 
 {"hello":"Found me"}  
 
-## MetalLB loadbalancer installation:
+## MetalLB loadbalancer installation
 
 kubectl get configmap kube-proxy -n kube-system -o yaml | \  
 sed -e "s/strictARP: false/strictARP: true/" | \  
