@@ -58,10 +58,11 @@ apiVersion: v1
         addresses:  
         - 10.0.1.245-10.0.1.250  
 ```
-
+Above config will give addr pool 245 - 250 to MetalLB and  
 kubectl apply -f config.yaml  
 
-Change gorestapi-svc.yaml type: ClusterIP => type: LoadBalancer  
+
+Test IP routing: Change gorestapi-svc.yaml type: ClusterIP => type: LoadBalancer  
 
 Check if app gets routable external ip:  
 kubectl get svc  
