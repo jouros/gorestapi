@@ -139,6 +139,8 @@ strict-transport-security: max-age=15768000
 
 ## Postgres DB installation
 
+kubectl apply -f postgres-configmap.yaml  
+
 kubectl apply -f postgres-deployment-svc.yaml  
 
 Note! We have type: NodePort to access our db from host.  
