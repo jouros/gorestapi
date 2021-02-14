@@ -3,6 +3,8 @@ package main
 import (
 	"restapi/httpd/handler" // handlers to handle different requests
 	"restapi/platform/newsfeed"
+	"restapi/platform/initialize" // db setup
+	"restapi/platform/data" // sql
 
 	"github.com/gin-gonic/gin"
 )
