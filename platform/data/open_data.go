@@ -2,18 +2,12 @@ package data
 
 import (
 	"database/sql"
-	"dbtest/data"
-	"fmt"
+	//"fmt"
 	"log"
-	"net/http"
+	//"net/http"
 
-	_ "github.com/lib/pq"
+	
 )
-
-//Env Create a custom struct which holds a connection pool
-type Env struct {
-	DB *sql.DB
-}
 
 func OpenData() (*sql.DB) {
 	db, err := sql.Open("postgres", "postgres://admin:admin123@localhost/dbtest?sslmode=disable")
@@ -25,10 +19,5 @@ func OpenData() (*sql.DB) {
 		log.Fatal(err)
 	}
 
-	defer db.Close()
-
-	// Create an instance of Env containing the connection pool.
-	env := &Env{DB: db}
-
-	return env
+	return db
 }

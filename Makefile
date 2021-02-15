@@ -28,4 +28,4 @@ git:
 	git push origin main
 
 dev:
-	go run httpd/main.go
+	go run main.go
