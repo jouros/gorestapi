@@ -2,18 +2,21 @@ package main
 
 import (
 	//"restapi/platform/initialize"
-	"database/sql"
-	"restapi/platform/data"
+	//"database/sql"
+	"github.com/jmoiron/sqlx"
 	"fmt"
 	"log"
 	"net/http"
+	"restapi/platform/data"
+	//"io/ioutil"
+	"encoding/json"
 
 	_ "github.com/lib/pq"
 )
 
 //Env Create a custom struct which holds a connection pool
 type Env struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 func main() {
@@ -31,8 +34,33 @@ func main() {
 
 	// Use env.booksIndex as the handler function for the /books route.
 	http.HandleFunc("/data", env.booksIndex)
+	http.HandleFunc("/post", env.PostItems)
 	http.ListenAndServe(":3000", nil)
 }
+
+// PostItems asdasd
+func (env *Env) PostItems(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+
+		var feed data.Item
+	
+		err := json.NewDecoder(r.Body).Decode(&feed)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+				
+		err = data.PostAll(env.DB, &feed)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, http.StatusText(500), 500)
+			return
+		}
+
+		fmt.Fprintf(w, "Data: %+v", feed)
+	}
+}
+
 
 // Define booksIndex as a method on Env.
 func (env *Env) booksIndex(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +73,6 @@ func (env *Env) booksIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, bk := range bks {
-		fmt.Fprintf(w, "%s, %s", bk.Title, bk.Post)
+		fmt.Fprintf(w, "%s", bk.Post)
 	}
 }
