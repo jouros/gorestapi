@@ -18,7 +18,7 @@ import (
 
 // Item Data structure
 type Item struct {
-	//Title string `json:"title"`
+	Title string `json:"title"`
 	Post  string `json:"post"`
 }
 
@@ -27,24 +27,29 @@ func PostAll(db *sqlx.DB, input *Item) error {
 	
 	ds := goqu.Insert("posts").Rows(input)
 	insertSQL, args, _ := ds.ToSQL()
-	fmt.Println(insertSQL, args)
+	log.Println("gogu: ", insertSQL, args)
 
-	fieldsToExtract := []string{"Post"}
+	fieldsToExtract := []string{"Title"}
 
 	for _, fieldName := range fieldsToExtract {
-    value, _ := reflections.GetField(input, fieldName)
+    value1, _ := reflections.GetField(input, fieldName)
+	
+
+	fieldsToExtract := []string{"Post"}
+	for _, fieldName := range fieldsToExtract {
+	value2, _ := reflections.GetField(input, fieldName)
     
 	//fmt.Println(value)
 
 	ins := "INSERT INTO posts (post) VALUES "
-	lauseke := fmt.Sprintf(`%v ('{"ghgfh": "%v"}')`, ins, value)
-	fmt.Println(lauseke)
+	lauseke := fmt.Sprintf(`%v ('{"%v": "%v"}')`, ins, value1, value2)
+	log.Println(lauseke)
 
 	_, err := db.Exec(lauseke) 
 		if err != nil {
 			log.Fatal(err)
 		}
-	}
+	}}
 	
 	//fmt.Printf(" PostAll %+v", input)
 	return nil
