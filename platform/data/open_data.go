@@ -16,7 +16,7 @@ func OpenData() (*sqlx.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// if could not sql.Open, maybe db.Ping is ok = db is there but something wrong with credentials
+	// Check Ping also
 	if err = db.Ping(); err != nil {
 		log.Fatal(err)
 	}
