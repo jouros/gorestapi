@@ -23,27 +23,45 @@ type Item struct {
 	Post  string `json:"post" validate:"nonzero"`
 }
 
-// PostAll db connection and pointer to Item Struct
-func PostAll(db *sqlx.DB, input *Item) error {
-	
+// Testgogu is just testing for fun
+func Testgogu(input *Item) {
 	// Just testing goqu for fun
 	ds := goqu.Insert("posts").Rows(input)
 	insertSQL, args, _ := ds.ToSQL()
-	log.Println("gogu: ", insertSQL, args)
+	log.Println("gogu is here: ", insertSQL, args)
+}
+
+// GetValues is func to read values from Item struct
+func GetValues(input *Item) (string, string) {
 
 	// Extract Struct field 'Title'
 	fieldsToExtract := []string{"Title"}
 
-	for _, fieldName := range fieldsToExtract {
-    value1, _ := reflections.GetField(input, fieldName)
-	
-	// Extract Struct field 'Post'
-	fieldsToExtract := []string{"Post"}
+	var value1 string
 
 	for _, fieldName := range fieldsToExtract {
-	value2, _ := reflections.GetField(input, fieldName)
+    	output1, _ := reflections.GetField(input, fieldName)
+		value1 = fmt.Sprintf("%v", output1)
+	}
 	
-	//fmt.Println(value)
+	// Extract Struct field 'Post'
+	fieldsToExtract2 := []string{"Post"}
+
+	var value2 string
+
+	for _, fieldName := range fieldsToExtract2 {
+		output2, _ := reflections.GetField(input, fieldName)
+		value2 = fmt.Sprintf("%v", output2)
+	}
+	return value1, value2
+}
+
+// PostAll db connection and pointer to Item Struct
+func PostAll(db *sqlx.DB, input *Item) error {
+	
+	Testgogu(input) // Just for fun
+
+	value1, value2 := GetValues(input) // GetValues from Item struct
 
 	// Format sql 
 	ins := "INSERT INTO posts (post) VALUES "
@@ -54,18 +72,22 @@ func PostAll(db *sqlx.DB, input *Item) error {
 		if err != nil {
 			log.Fatal(err)
 		}
-	}} // Double For range loop in fieldsToExtract
-	
-	//fmt.Printf(" PostAll %+v", input)
-	return nil
+
+	return err
 }
 
-// AllItems sdasdasd
+// AllItems to read all posted data
 func AllItems(db *sqlx.DB) ([]Item, error) {
+	
+	log.Println("AllItems is here")
+	
 	rows, err := db.Query("SELECT post FROM posts")
+	
 	if err != nil {
 		return nil, err
+	
 	}
+	
 	defer rows.Close()
 
 	var bks []Item // bks = Item Struct
@@ -73,7 +95,7 @@ func AllItems(db *sqlx.DB) ([]Item, error) {
 	for rows.Next() {
 		var bk Item
 
-		err := rows.Scan(&bk.Title)
+		err := rows.Scan(&bk.Post)
 		if err != nil {
 			return nil, err
 		}
