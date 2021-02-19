@@ -14,13 +14,13 @@ spec:
           service:
             name: gorestapi 
             port:
-              number: 8080
+              number: 3000 
       - path: /newsfeed
         pathType: Prefix
         backend:
           service:
             name: gorestapi
             port:
-              number: 8080
+              number: 3000 
 status:
   loadBalancer: {}
