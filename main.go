@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"restapi/platform/initialize"
+	"restapi/platform/initialize"
 	//"database/sql"
 	"github.com/jmoiron/sqlx"
 	"fmt"
@@ -23,7 +23,7 @@ type Env struct {
 func main() {
 
 	// Initialize db
-	// initialize.SyncSchemas()
+	initialize.SyncSchemas()
 
 	// Initialise the connection pool.
 	db := data.OpenData()

@@ -12,7 +12,7 @@ import (
 
 // OpenData connection
 func OpenData() (*sqlx.DB) {
-	db, err := sqlx.Open("postgres", "postgres://admin:admin123@localhost/dbtest?sslmode=disable")
+	db, err := sqlx.Open("postgres", "postgres://admin:admin123@postgres/dbtest?sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}

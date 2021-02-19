@@ -158,4 +158,24 @@ psql -h 10.0.1.204 -U admin --password -p 32531 omadb
 Password:    
 omadb=# quit  
 
+## Wait for postgres connection with initContainer
 
+Get script:  
+git clone https://github.com/bells17/wait-for-it-for-busybox  
+
+Create configmap:  
+kubectl create configmap wait-for-it --dry-run=client -o yaml --from-file=wait-for-it.sh > wait-for-it-configmap.yaml  
+
+Deploy configmap (I always like to checkit up before deployment):  
+kubectl apply -f wait-for-it-configmap.yaml  
+configmap/wait-for-it created  
+
+Testing above wait-for-it script with standalone alpine, I just didn't get it work in Busybox:  
+kubectl logs alpine  
+wait-for-it.sh: waiting for postgres:5432 without a timeout  
+wait-for-it.sh: postgres:5432 is available after 0 seconds  
+
+Same logs from initContainer:  
+kubectl logs gorestapi-566b5db78b-z87qt -c wait-for-postgres  
+wait-for-it.sh: waiting for postgres:5432 without a timeout  
+wait-for-it.sh: postgres:5432 is available after 0 seconds  

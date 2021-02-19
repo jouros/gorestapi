@@ -6,18 +6,35 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: gorestapi 
+      app: gorestapi
   template:
     metadata:
       labels:
         app: gorestapi 
     spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: alpine 
+        command: ["sh", "-c", "until /script/wait-for-it.sh -t 0 postgres:5432; do echo waiting for db; sleep 2; done"]
+        volumeMounts:
+          - name: script 
+            mountPath: /script/wait-for-it.sh
+            subPath: wait-for-it.sh
+      volumes:
+        - name: script 
+          configMap:
+            name: wait-for-it
+            defaultMode: 0777
       containers:
       - name: gorestapi 
-        image: jrcjoro1/gorestapi:1.0 
+        image: jrcjoro1/gorestapi:1.3 
         imagePullPolicy: IfNotPresent
         livenessProbe:
           tcpSocket:
-            port: 8080
+            port: 3000 
+#        readinessProbe:
+#          tcpSocket:
+#            host: localhost
+#            port: 8080
         ports:
-        - containerPort: 8080
+        - containerPort: 3000 
