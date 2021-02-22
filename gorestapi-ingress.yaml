@@ -4,18 +4,19 @@ metadata:
   name: gorestapi-ingress
   annotations:
     kubernetes.io/ingress.class: haproxy
+    ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
   - http:
       paths:
-      - path: /ping
+      - path: /data
         pathType: Prefix 
         backend:
           service:
             name: gorestapi 
             port:
               number: 3000 
-      - path: /newsfeed
+      - path: /post
         pathType: Prefix
         backend:
           service:

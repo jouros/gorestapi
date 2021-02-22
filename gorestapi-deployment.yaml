@@ -27,8 +27,8 @@ spec:
             defaultMode: 0777
       containers:
       - name: gorestapi 
-        image: jrcjoro1/gorestapi:1.3 
-        imagePullPolicy: IfNotPresent
+        image: jrcjoro1/gorestapi:1.4 
+        imagePullPolicy: Always 
         livenessProbe:
           tcpSocket:
             port: 3000 
