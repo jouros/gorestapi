@@ -4,15 +4,16 @@ import (
 	"log"
 
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Postgres
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
+// SyncSchemas initialize db schema
 func SyncSchemas() {
-	// initialize dbtest in localhost
+	// initialize omadb in K8s 
 	m, err := migrate.New(
-		"file://initialize/sql",
-		"postgres://admin:admin123@postgres:5432/dbtest?sslmode=disable")
+		"file://platform/initialize/sql",
+		"postgres://admin:admin123@postgres:5432/omadb?sslmode=disable")
 	if err != nil {
 		log.Fatalf("Unable to start db schema migrator %v", err)
 	}

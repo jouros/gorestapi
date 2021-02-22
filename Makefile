@@ -10,11 +10,10 @@ DOCKER_HUB=registry.hub.docker.com
 build:
 	podman build --format=docker --log-level=debug --tag $(REPO_PUBLIC):$(tag) -f ./Dockerfile
 
-# use make push tag="TAG"
+# use make push tag="TAG", remember to do login first
 .PHONY: push
 push:
 	podman push --log-level=debug $(REPO_PUBLIC):$(tag)
-
 
 .PHONY: test
 test:
@@ -27,5 +26,11 @@ git:
 	git commit -m "$m"
 	git push origin main
 
+.PHONY: dev
 dev:
 	go run main.go
+
+# make podmanrun tag="TAG"
+.PHONY: podmanrun
+podmanrun:
+	podman run -p 3000:3000 --log-level=debug registry.hub.docker.com/jrcjoro1/gorestapi:$(tag)
