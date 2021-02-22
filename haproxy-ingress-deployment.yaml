@@ -46,10 +46,12 @@ rules:
     resources:
       - ingresses
       - ingressclasses
+      - ingresses/status
     verbs:
       - get
       - list
       - watch
+      - update
   - apiGroups:
       - ""
     resources:
@@ -139,6 +141,9 @@ kind: ConfigMap
 metadata:
   name: haproxy-ingress
   namespace: ingress-controller
+data:
+  syslog-endpoint: "localhost:514"
+  http-log-format: "%ci:%cp->%b/%s\\ method=%HM\\ uri=%HU\\ rcvms=%TR\\ serverms=%Tr\\ activems=%Ta\\ bytes=%B\\ status=%ST"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -219,6 +224,12 @@ spec:
         role: ingress-controller
       serviceAccountName: ingress-controller
       containers:
+      - name: access-logs
+        image: jumanjiman/rsyslog
+        ports: 
+        - name: udp
+          containerPort: 514
+          protocol: UDP
       - name: haproxy-ingress
         image: quay.io/jcmoraisjr/haproxy-ingress
         args:
