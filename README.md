@@ -179,3 +179,38 @@ Same logs from initContainer:
 kubectl logs gorestapi-566b5db78b-z87qt -c wait-for-postgres  
 wait-for-it.sh: waiting for postgres:5432 without a timeout  
 wait-for-it.sh: postgres:5432 is available after 0 seconds  
+
+## Special notes
+
+In Dockerfile:
+RUN go get github.com/golang-migrate/migrate/v4/database/postgres  
+RUN go get github.com/golang-migrate/migrate/v4/source/file  
+
+Above is needed for not having missing import error
+
+In gorestapi-ingress.yaml:  
+ingress.kubernetes.io/ssl-redirect: "false"  
+
+Above is needed because default haproxy config for ssl redirect is 'true' and this demo app does not have ssl.  
+
+haproxy-ingress-deployment.yaml RBAC fix:  
+
+```apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+  - apiGroups:
+      - "extensions"
+      - "networking.k8s.io"
+    resources:
+      - ingresses
+      - ingressclasses
+      - ingresses/status```
+
+Rsyslog sidecar for http access logs in haproxy-ingress-deployment.yaml:  
+
+      ```- name: access-logs
+        image: jumanjiman/rsyslog
+        ports: 
+        - name: udp
+          containerPort: 514
+          protocol: UDP```
+
