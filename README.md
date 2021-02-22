@@ -182,7 +182,7 @@ wait-for-it.sh: postgres:5432 is available after 0 seconds
 
 ## Special notes
 
-In Dockerfile:
+In Dockerfile:  
 RUN go get github.com/golang-migrate/migrate/v4/database/postgres  
 RUN go get github.com/golang-migrate/migrate/v4/source/file  
 
