@@ -50,7 +50,7 @@ kubectl create secret generic -n metallb-system memberlist --from-literal=secret
 
 $ cat config.yaml  
 
-```
+```yaml:
 
 apiVersion: v1  
   kind: ConfigMap  
@@ -65,7 +65,7 @@ apiVersion: v1
         addresses:  
         - 10.0.1.245-10.0.1.250  
 
-```yaml:
+```
 
 Above config will give addr pool 245 - 250 to MetalLB
 
