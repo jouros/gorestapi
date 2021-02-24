@@ -142,8 +142,15 @@ metadata:
   name: haproxy-ingress
   namespace: ingress-controller
 data:
-  syslog-endpoint: "localhost:514"
-  http-log-format: "%ci:%cp->%b/%s\\ method=%HM\\ uri=%HU\\ rcvms=%TR\\ serverms=%Tr\\ activems=%Ta\\ bytes=%B\\ status=%ST"
+  max-connections: "102"
+  syslog-endpoint: "127.0.0.1:514"
+#  syslog-endpoint: "stdout"
+  syslog-format: "raw"
+  http-log-format: "%ci:%cp\\ method=%HM\\ uri=%HU\\ rcvms=%TR\\ serverms=%Tr\\ activems=%Ta\\ bytes=%B\\ status=%ST"
+#  config-global: |
+#  config-frontend: |
+#    capture request header Host len 32
+#    capture request header User-Agent len 200 
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -225,16 +232,19 @@ spec:
       serviceAccountName: ingress-controller
       containers:
       - name: access-logs
-        image: jumanjiman/rsyslog
+#        image: jumanjiman/rsyslog
+        image: appropriate/nc 
         ports: 
         - name: udp
           containerPort: 514
           protocol: UDP
+        args: ["-ul", "514"]
       - name: haproxy-ingress
         image: quay.io/jcmoraisjr/haproxy-ingress
         args:
         - --default-backend-service=ingress-controller/default-http-backend
 #        - --default-ssl-certificate=ingress-controller/tls-secret
+        - --configmap=ingress-controller/haproxy-ingress
         ports:
         - name: http
           containerPort: 80

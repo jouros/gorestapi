@@ -5,6 +5,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: haproxy
     ingress.kubernetes.io/ssl-redirect: "false"
+    ingress.kubernetes.io/balance-algorithm: roundrobin
 spec:
   rules:
   - http:
