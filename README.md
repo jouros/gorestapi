@@ -12,7 +12,7 @@ kubectl apply -f gorestapi-deployment.yaml
 
 kubectl apply -f gorestapi-svc.yaml  
 
-cmd line api testing:  
+cmd line api testing (first version of restapi app):  
 
 curl -i <http://127.0.0.1:8080/ping>  
 
@@ -163,6 +163,8 @@ Test db connection: https:
 psql -h 10.0.1.204 -U admin --password -p 32531 omadb  
 Password:
 omadb=# quit  
+
+At this stage, I developed second version of go app with Postgres db connection.
 
 ## Wait for postgres connection with initContainer
 
