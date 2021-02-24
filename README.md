@@ -201,7 +201,8 @@ Above is needed because default haproxy config for ssl redirect is 'true' and th
 
 haproxy-ingress-deployment.yaml RBAC fix:  
 
-```apiVersion: rbac.authorization.k8s.io/v1
+```yaml:
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
   - apiGroups:
       - "extensions"
@@ -209,16 +210,19 @@ kind: ClusterRole
     resources:
       - ingresses
       - ingressclasses
-      - ingresses/status```
+      - ingresses/status
+```
 
 Rsyslog sidecar for http access logs in haproxy-ingress-deployment.yaml:  
 
-      ```- name: access-logs
+```yaml:
+      - name: access-logs
         image: jumanjiman/rsyslog
         ports: 
         - name: udp
           containerPort: 514
-          protocol: UDP```
+          protocol: UDP
+```
 
 ## Haproxy connection logging
 
