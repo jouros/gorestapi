@@ -23,9 +23,11 @@ curl -i <http://127.0.0.1:8080/newsfeed>
 K8s cmd line testing:  
 kubectl get svc  
 
-```NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE  
+```plaintext:
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE  
 gorestapi    ClusterIP   10.110.175.227   <none>        8080/TCP   4m55s  
-kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP    58d```
+kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP    58d
+```
 
 Check if app is responding:  
 curl -i <http://10.110.175.227:8080/ping>  
