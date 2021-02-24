@@ -237,4 +237,11 @@ http-log-format: "%ci:%cp\\ method=%HM\\ uri=%HU\\ rcvms=%TR\\ serverms=%Tr\\ ac
 %B  = bytes_read  
 %ST = status_code  
 
+In this demo I had two different sidecar alternatives for collecting haproxy logs: rsyslog and netcat. Here's rsyslog example:  
+kubectl logs -f haproxy-ingress-bnn7s -n ingress-controller -c access-logs  
+```plaintext:
+2021-02-24T13:18:33.493980+00:00 localhost 10.0.1.1: 44810 method=GET uri=/data rcvms=0 serverms=2 activems=2 bytes=87 status=200
+2021-02-24T13:18:34.516629+00:00 localhost 10.0.1.1: 44812 method=GET uri=/data rcvms=0 serverms=3 activems=4 bytes=87 status=200
+```
+
 ## Helm

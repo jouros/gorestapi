@@ -232,13 +232,13 @@ spec:
       serviceAccountName: ingress-controller
       containers:
       - name: access-logs
-#        image: jumanjiman/rsyslog
-        image: appropriate/nc 
+        image: jumanjiman/rsyslog
+#        image: appropriate/nc 
         ports: 
         - name: udp
           containerPort: 514
           protocol: UDP
-        args: ["-ul", "514"]
+#        args: ["-ul", "514"]
       - name: haproxy-ingress
         image: quay.io/jcmoraisjr/haproxy-ingress
         args:
