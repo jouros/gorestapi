@@ -77,11 +77,16 @@ Test IP routing: Change gorestapi-svc.yaml type: ClusterIP => type: LoadBalancer
 
 Check if app gets routable external ip:  
 kubectl get svc  
+
+```plaintext:
 NAME         TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE  
 gorestapi    LoadBalancer   10.110.175.227   10.0.1.245    8080:32370/TCP   9m19s  
 kubernetes   ClusterIP      10.96.0.1        <none>        443/TCP          58d  
+```
 
 Test from outside:  
+
+```plaintext:
   curl -i <http://10.0.1.245:8080/ping>
   HTTP/1.1 200 OK
   Content-Type: application/json; charset=utf-8
@@ -89,6 +94,7 @@ Test from outside:
   Content-Length: 20
 
   {"hello":"Found me"}
+```
 
 ## Install haproxy-ingress controller
 
@@ -104,10 +110,13 @@ Label nodes 1-3 (I have 4 worker nodes):
 
 Check labels:
 kubectl get nodes --selector='role=ingress-controller'  
+
+```plaintext:
 NAME      STATUS   ROLES    AGE   VERSION  
 worker1   Ready    <none>   57d   v1.20.0  
 worker2   Ready    <none>   57d   v1.20.0  
 worker3   Ready    <none>   57d   v1.20.0  
+```
 
 kubectl create ns ingress-controller  
 
@@ -156,7 +165,7 @@ Note! We have type: NodePort to access our db from host.
 Check Postgres port:  
 
 kubectl get svc  
-postgres     NodePort    10.100.109.205   <none>        5432:32531/TCP   28m  
+postgres     NodePort    10.100.109.205   none        5432:32531/TCP   28m  
 
 Test db connection: https:  
 
@@ -241,9 +250,32 @@ http-log-format: "%ci:%cp\\ method=%HM\\ uri=%HU\\ rcvms=%TR\\ serverms=%Tr\\ ac
 
 In this demo I had two different sidecar alternatives for collecting haproxy logs: rsyslog and netcat. Here's rsyslog example:  
 kubectl logs -f haproxy-ingress-bnn7s -n ingress-controller -c access-logs  
+
 ```plaintext:
 2021-02-24T13:18:33.493980+00:00 localhost 10.0.1.1: 44810 method=GET uri=/data rcvms=0 serverms=2 activems=2 bytes=87 status=200
 2021-02-24T13:18:34.516629+00:00 localhost 10.0.1.1: 44812 method=GET uri=/data rcvms=0 serverms=3 activems=4 bytes=87 status=200
 ```
 
-## Helm
+## Installing Prometheus with Helm 3
+
+I don't have storage in my demo lab, so I need to disable peristentVolumeClaims:
+
+```plaintext:
+helm install prometheus prometheus-community/prometheus -n monitoring --set alertmanager.persistentVolume.enabled=false --set server.persistentVolume.enabled=false --set pushgateway.persistentVolume.enabled=false
+```
+
+Check it up: kubectl get pods -n monitoring
+
+```plaintext:
+NAME                                            READY   STATUS    RESTARTS   AGE
+prometheus-alertmanager-6866b96d6f-fk2qt        2/2     Running   0          89s
+prometheus-kube-state-metrics-95d956569-f7gx6   1/1     Running   0          89s
+prometheus-node-exporter-2vscs                  1/1     Running   0          89s
+prometheus-node-exporter-b27hw                  1/1     Running   0          89s
+prometheus-node-exporter-hcgzd                  1/1     Running   0          89s
+prometheus-node-exporter-kn4ps                  1/1     Running   0          89s
+prometheus-pushgateway-bd8d484d6-d5wcr          1/1     Running   0          89s
+prometheus-server-7f67fc9bdb-2mhqx              2/2     Running   0          89s
+```
+
+## Re-install haproxy with helm and add Prometheus monitoring support
