@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haproxy-ingress
+  namespace: ingress-controller
+data:
+  max-connections: "102"
+#  syslog-endpoint: "127.0.0.1:514"
+  syslog-endpoint: "stdout"
+  syslog-format: "raw"
+  http-log-format: "%ci:%cp\\ method=%HM\\ uri=%HU\\ rcvms=%TR\\ serverms=%Tr\\ activems=%Ta\\ bytes=%B\\ status=%ST"
