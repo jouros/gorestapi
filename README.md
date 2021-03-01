@@ -278,29 +278,23 @@ prometheus-pushgateway-bd8d484d6-d5wcr          1/1     Running   0          89s
 prometheus-server-7f67fc9bdb-2mhqx              2/2     Running   0          89s
 ```
 
-## Re-install haproxy with helm and add Prometheus monitoring support
+Default K8s installation need some fixing for Prometheus:  
+
+```plaintext:
+$ kubectl get pod kube-controller-manager-master1 -n kube-system  -o yaml | grep 'bind-address'
+    - --bind-address=127.0.0.1
+```
+
+We'll use haproxy to expose metrics from kube-controller-manager:  
+
+
+
+## Install Haproxy monitoring support
 
 First remove old installation:  
 kubectl delete -f haproxy-ingress-deployment.yaml  
 kubectl delete -f haproxy-svc.yaml  
 kubectl delete ns ingress-controller  
-
-helm search repo haproxy-ingress
-
-```plaintext:
-NAME                            CHART VERSION APP VERSION DESCRIPTION  
-haproxy-ingress/haproxy-ingress 0.12.0        v0.12       Ingress controller for HAProxy loadbalancer  
-```
-
-First let's check default values:
-helm pull haproxy-ingress/haproxy-ingress
-
-```plaintext:
-helm install haproxy-ingress haproxy-ingress/haproxy-ingress --create-namespace --namespace ingress-controller --version 0.12.0 --set controller.hostNetwork=true --set controller.stats.enabled=true --set controller.metrics.enabled=true
-```
-
-Install Haproxy configmap:  
-kubectl apply -f haproxy-configmap.yaml  
 
 Open connection to Prometheus server:  
 kubectl --address localhost,10.0.1.131 -n monitoring port-forward prometheus-server-7f67fc9bdb-2mhqx 8090:9090
@@ -310,3 +304,46 @@ Test from outside of cluster (that query will list all K8s resources):
 ```plaintext:
 curl --data-urlencode 'query=up{}' http://10.0.1.131:8090/api/v1/query | jq  
 ```
+
+Above Prometheus version has problem with kind ServiceMonitor, so I'll try next version:  
+
+```plaintext:
+helm install prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring --set prometheusOperator.hostNetwork=true --set defaultRules.rules.kubernetesStorage=false --set prometheusOperator.tls.internalPort=10251
+```
+
+Test again from outside:  
+
+```plaintext:
+kubectl --address localhost,10.0.1.131 -n monitoring port-forward svc/prometheus-stack-kube-prom-prometheus 32090:9090  
+```
+
+```plaintext:
+curl --data-urlencode 'query=up{}' http://10.0.1.131:32090/api/v1/query | jq
+```
+
+## Re-install haproxy with helm and monitoring
+
+helm search repo haproxy-ingress
+
+```plaintext:
+NAME                            CHART VERSION APP VERSION DESCRIPTION  
+haproxy-ingress/haproxy-ingress 0.12.0        v0.12       Ingress controller for HAProxy loadbalancer  
+```
+
+First let's check default values:  
+helm pull haproxy-ingress/haproxy-ingress  
+
+```plaintext:
+helm install haproxy-ingress haproxy-ingress/haproxy-ingress --create-namespace --namespace ingress-controller --version 0.12.0 --set controller.hostNetwork=true --set controller.stats.enabled=true --set controller.metrics.enabled=true --set controller.serviceMonitor.enabled=true
+```
+
+First test haproxy metrics api:  
+
+```plaintext:
+curl -i http://10.104.136.22:9101/metrics
+```
+
+
+Install Haproxy configmap:  
+kubectl apply -f haproxy-configmap.yaml  
+
