@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    run: haproxy-fix
+  name: haproxy-fix
+  namespace: kube-system 
+  labels:
+    kubernetes.io/cluster-service: "true" 
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      run: haproxy-fix
+  template:
+    metadata:
+      labels:
+        run: haproxy-fix
+    spec:
+      hostNetwork: true
+#      nodeSelector:
+#        dedicated: master 
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+#      - name: access-logs
+#        image: jumanjiman/rsyslog
+#        image: appropriate/nc 
+#        ports: 
+#        - name: udp
+#          containerPort: 514
+#          protocol: UDP
+#        args: ["-ul", "514"]
+      - name: haproxy-fix
+        image: jrcjoro1/haproxy-fix:1.8
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        - name: stat
+          containerPort: 1936
+        - name: haproxy-stats
+          containerPort: 10254
+#        livenessProbe:
+#          httpGet:
+#            path: /healthz
+#            port: 10253
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
