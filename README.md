@@ -347,7 +347,5 @@ First test haproxy metrics api:
 curl -i http://10.104.136.22:9101/metrics
 ```
 
-
 Install Haproxy configmap:  
 kubectl apply -f haproxy-configmap.yaml  
-
