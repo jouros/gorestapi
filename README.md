@@ -291,7 +291,7 @@ We have some problems to fix:
 2. Same as above with kube scheduler, prome is trying deprecated port 10251, new port is 10257  
 3. Prometheus is trying to access master ip, when as seen above, bind-adderess is 127.0.0.1  
 
-We'll use haproxy to expose above metrics, custom build jrcjoro1/haproxy-fix:1.8 will redirect prometheus scrape to localhost and correct port. For testing haproxy-fix redirect, I used curl-test.yaml.
+I'll use haproxy to expose above metrics, custom build jrcjoro1/haproxy-fix:1.8 will redirect prometheus scrape to localhost and correct port. For testing haproxy-fix redirect, I used curl-test.yaml.
 
 ## Install Haproxy monitoring support
 
