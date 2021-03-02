@@ -285,9 +285,13 @@ $ kubectl get pod kube-controller-manager-master1 -n kube-system  -o yaml | grep
     - --bind-address=127.0.0.1
 ```
 
-We'll use haproxy to expose metrics from kube-controller-manager:  
+We have some problems to fix:
 
+1. Prometheus is trying to get kube controller manager metrics from deprecated port 10252, new port is 10259  
+2. Same as above with kube scheduler, prome is trying deprecated port 10251, new port is 10257  
+3. Prometheus is trying to access master ip, when as seen above, bind-adderess is 127.0.0.1  
 
+We'll use haproxy to expose above metrics, custom build jrcjoro1/haproxy-fix:1.8 will redirect prometheus scrape to localhost and correct port. For testing haproxy-fix redirect, I used curl-test.yaml.
 
 ## Install Haproxy monitoring support
 
