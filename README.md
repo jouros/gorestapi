@@ -258,6 +258,8 @@ kubectl logs -f haproxy-ingress-bnn7s -n ingress-controller -c access-logs
 
 ## Installing Prometheus with Helm 3
 
+Note! Here is first tested Prometheus helm version, I changed version later.
+
 I don't have storage in my demo lab, so I need to disable peristentVolumeClaims:
 
 ```plaintext:
