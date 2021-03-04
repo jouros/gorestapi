@@ -287,23 +287,17 @@ $ kubectl get pod kube-controller-manager-master1 -n kube-system  -o yaml | grep
     - --bind-address=127.0.0.1
 ```
 
-We have some problems to fix:
+```plaintext:
+$ kubectl describe pod etcd-master1 -n kube-system | grep url
+Annotations:          kubeadm.kubernetes.io/etcd.advertise-client-urls: https://10.0.1.131:2379
+      --advertise-client-urls=https://10.0.1.131:2379
+      --initial-advertise-peer-urls=https://10.0.1.131:2380
+      --listen-client-urls=https://127.0.0.1:2379,https://10.0.1.131:2379
+      --listen-metrics-urls=http://127.0.0.1:2381
+      --listen-peer-urls=https://10.0.1.131:2380
+```
 
-1. Prometheus is trying to get kube controller manager metrics from deprecated port 10252, new port is 10259  
-2. Same as above with kube scheduler, prome is trying deprecated port 10251, new port is 10257  
-3. Prometheus is trying to access master ip, when as seen above, bind-adderess is 127.0.0.1  
-
-I'll use haproxy to expose above metrics, my custom build jrcjoro1/haproxy-fix:1.8 will redirect prometheus scrape to localhost and correct port. For testing haproxy-fix redirect, I used curl-test.yaml:
-
-kubectl apply -f haproxy-fix-deployment.yaml  
-kubectl apply -f curl-test.yaml
-
-## Install Haproxy monitoring support
-
-First remove old installation:  
-kubectl delete -f haproxy-ingress-deployment.yaml  
-kubectl delete -f haproxy-svc.yaml  
-kubectl delete ns ingress-controller  
+etcd configs can be found from here: /etc/kubernetes/manifests/etcd.yaml  
 
 Open connection to Prometheus server:  
 kubectl --address localhost,10.0.1.131 -n monitoring port-forward prometheus-server-7f67fc9bdb-2mhqx 8090:9090
@@ -314,23 +308,59 @@ Test from outside of cluster (that query will list all K8s resources):
 curl --data-urlencode 'query=up{}' http://10.0.1.131:8090/api/v1/query | jq  
 ```
 
-Above Prometheus version has problem with kind ServiceMonitor, so I'll try next version:  
+Above prometheus-community/prometheus version has problem with kind ServiceMonitor, so I'll try next version kube-prometheus-stack:  
 
 ```plaintext:
 helm install prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring --set prometheusOperator.hostNetwork=true --set defaultRules.rules.kubernetesStorage=false --set prometheusOperator.tls.internalPort=10251
 ```
 
-Test again from outside:  
+Open Prometheus connection:  
 
 ```plaintext:
 kubectl --address localhost,10.0.1.131 -n monitoring port-forward svc/prometheus-stack-kube-prom-prometheus 32090:9090  
 ```
 
+Test again from outside:  
+
 ```plaintext:
 curl --data-urlencode 'query=up{}' http://10.0.1.131:32090/api/v1/query | jq
 ```
 
+We have some access problems to be fixed:
+
+1. Prometheus is trying to get kube controller manager metrics from deprecated port 10252, new port is 10259  
+2. Same as above with kube scheduler, prome is trying deprecated port 10251, new port is 10257  
+3. Prometheus is trying to access master ip, when as seen above, bind-adderess is 127.0.0.1
+4. Prometheus is trying to access etcd from <http://masterip:2379>, but as we can see from above, etcd is offering https connection
+
+I'll use haproxy to fix above problems 1-3. I made custom build jrcjoro1/haproxy-fix that will redirect prometheus scrape to correct Pod localhost.
+
+For testing haproxy-fix redirect, I used curl-test.yaml:
+
+kubectl apply -f haproxy-fix-deployment.yaml  
+kubectl apply -f curl-test.yaml
+
+For problem 4. we need to set client cert auth. First let's check etcd connection from control-plane cmd line:  
+
+```plaintext:
+sudo curl --cert /etc/kubernetes/pki/etcd/peer.crt --key /etc/kubernetes/pki/etcd/peer.key --cacert /etc/kubernetes/pki/etcd/ca.crt  https://10.0.1.131:2379/health
+{"health":"true"}
+```
+
+Create Prometheus secret etcd-client:  
+./generate_prome_etcd_auth.sh  
+secret/etcd-client created  
+NAME          TYPE     DATA   AGE  
+etcd-client   Opaque   3      0s  
+
+Re-install prometheus-stack with etcd auth secret:  
+
 ## Re-install haproxy with helm and monitoring
+
+First remove old non Helm installation:  
+kubectl delete -f haproxy-ingress-deployment.yaml  
+kubectl delete -f haproxy-svc.yaml  
+kubectl delete ns ingress-controller  
 
 helm search repo haproxy-ingress
 

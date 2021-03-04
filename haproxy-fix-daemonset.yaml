@@ -1,30 +1,26 @@
 apiVersion: apps/v1
-kind: Deployment 
+kind: DaemonSet 
 metadata:
   labels:
     run: haproxy-fix
-    kubernetes.io/cluster-service: "true"
   name: haproxy-fix
   namespace: kube-system 
+  labels:
+    kubernetes.io/cluster-service: "true" 
 spec:
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       run: haproxy-fix
-  replicas: 1
-  minReadySeconds: 10
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
   template:
     metadata:
       labels:
         run: haproxy-fix
     spec:
       hostNetwork: true
-      nodeSelector:
-        node-role.kubernetes.io/master: "" 
+#      nodeSelector:
+#        dedicated: master 
       tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
