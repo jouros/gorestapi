@@ -1,0 +1,23 @@
+prometheusOperator:
+  hostNetwork: true
+
+defaultRules:
+  rules:
+    kubernetesStorage: false
+
+prometheusOperator:
+  tls:
+    internalPort: 10251
+
+kubeEtcd:
+  serviceMonitor:
+    scheme: https
+    insecureSkipVerify: true
+    caFile: /etc/prometheus/secrets/etcd-client/ca.crt
+    certFile: /etc/prometheus/secrets/etcd-client/healthcheck-client.crt
+    keyFile: /etc/prometheus/secrets/etcd-client/healthcheck-client.key
+
+prometheus:
+  prometheusSpec:
+    secrets:
+      - etcd-client

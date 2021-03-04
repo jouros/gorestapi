@@ -332,6 +332,7 @@ We have some access problems to be fixed:
 2. Same as above with kube scheduler, prome is trying deprecated port 10251, new port is 10257  
 3. Prometheus is trying to access master ip, when as seen above, bind-adderess is 127.0.0.1
 4. Prometheus is trying to access etcd from <http://masterip:2379>, but as we can see from above, etcd is offering https connection
+5. Prometheus
 
 I'll use haproxy to fix above problems 1-3. I made custom build jrcjoro1/haproxy-fix that will redirect prometheus scrape to correct Pod localhost.
 
@@ -354,6 +355,21 @@ NAME          TYPE     DATA   AGE
 etcd-client   Opaque   3      0s  
 
 Re-install prometheus-stack with etcd auth secret:  
+
+helm uninstall prometheus-stack -n monitoring  
+release "prometheus-stack" uninstalled  
+
+Complete wipeout:
+kubectl delete ns monitoring  
+
+Re-install etcd secrets:  
+./generate_prome_etcd_auth.sh  
+secret/etcd-client created  
+NAME          TYPE     DATA   AGE  
+etcd-client   Opaque   3      1s  
+
+Install Prometheus with custom values:  
+helm install -f custom-prometheus-values.yaml prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring  
 
 ## Re-install haproxy with helm and monitoring
 
