@@ -332,7 +332,7 @@ We have some access problems to be fixed:
 2. Same as above with kube scheduler, prome is trying deprecated port 10251, new port is 10257  
 3. Prometheus is trying to access master ip, when as seen above, bind-adderess is 127.0.0.1
 4. Prometheus is trying to access etcd from <http://masterip:2379>, but as we can see from above, etcd is offering https connection
-5. Prometheus
+5. Prometheus is trying to access kube-proxy metrics from masterip:10249 when it's available in localhost:10249
 
 I'll use haproxy to fix above problems 1-3. I made custom build jrcjoro1/haproxy-fix that will redirect prometheus scrape to correct Pod localhost.
 
@@ -370,6 +370,20 @@ etcd-client   Opaque   3      1s
 
 Install Prometheus with custom values:  
 helm install -f custom-prometheus-values.yaml prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring  
+
+Fixing problem 5. First check kube-proxy metrics api:  
+curl -i <http://127.0.0.1:10249/metrics>  
+
+Edit kube-proxy configmap:  
+k edit cm kube-proxy -n kube-system <= change metricsBindAddress: "" => metricsBindAddress: 0.0.0.0
+
+Reload kube-proxy:  
+kubectl delete pod -l k8s-app=kube-proxy -n kube-system  
+
+Re-test with control-plane ip:  
+curl -i <http://10.0.1.131:10249/metrics>  
+
+Now Prometheus can discover all targets :)
 
 ## Re-install haproxy with helm and monitoring
 
