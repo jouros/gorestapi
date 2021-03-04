@@ -375,7 +375,7 @@ Fixing problem 5. First check kube-proxy metrics api:
 curl -i <http://127.0.0.1:10249/metrics>  
 
 Edit kube-proxy configmap:  
-k edit cm kube-proxy -n kube-system <= change metricsBindAddress: "" => metricsBindAddress: 0.0.0.0
+kubectl edit cm kube-proxy -n kube-system <= change metricsBindAddress: "" => metricsBindAddress: 0.0.0.0
 
 Reload kube-proxy:  
 kubectl delete pod -l k8s-app=kube-proxy -n kube-system  
