@@ -38,7 +38,7 @@ spec:
 #          protocol: UDP
 #        args: ["-ul", "514"]
       - name: haproxy-fix
-        image: jrcjoro1/haproxy-fix:1.9
+        image: jrcjoro1/haproxy-fix:1.8
         ports:
         - name: http
           containerPort: 80
