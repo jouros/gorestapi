@@ -448,10 +448,10 @@ Add cluster to Lens by giving path to above config.
 ## Kubernetes Auditing
 
 To be continued...  
- 
+
 ## Deploy Falco security
 
-helm repo add falcosecurity https://falcosecurity.github.io/charts  
+helm repo add falcosecurity <https://falcosecurity.github.io/charts>  
 "falcosecurity" has been added to your repositories  
 
 helm search repo falco  
