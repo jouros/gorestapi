@@ -444,3 +444,23 @@ Install: sudo apt install ./Lens-4.1.4.amd64.deb
 Copy ~/.kube/config of the remote Kubernetes host to your local dir.  
 
 Add cluster to Lens by giving path to above config.  
+
+## Kubernetes Auditing
+
+To be continued...  
+ 
+## Deploy Falco security
+
+helm repo add falcosecurity https://falcosecurity.github.io/charts  
+"falcosecurity" has been added to your repositories  
+
+helm search repo falco  
+NAME                         CHART VERSION APP VERSION DESCRIPTION  
+falcosecurity/falco          1.7.7         0.27.0      Falco  
+falcosecurity/falco-exporter 0.5.1         0.5.0       Prometheus Metrics Exporter for Falco output ev...  
+falcosecurity/falcosidekick  0.2.9        2.21.0     A simple daemon to help you with falco's outputs  
+
+Check Falco default values:  
+helm pull falcosecurity/falco
+
+To be continued...  
