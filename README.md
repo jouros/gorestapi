@@ -2,7 +2,7 @@
 
 My personal Go playground.  
 
-REST api written in Go and K8s deployment.  
+REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3 and plenty of admin trics.
 
 ## K8s installation
 
@@ -304,9 +304,7 @@ kubectl --address localhost,10.0.1.131 -n monitoring port-forward prometheus-ser
 
 Test from outside of cluster (that query will list all K8s resources):  
 
-```plaintext:
-curl --data-urlencode 'query=up{}' http://10.0.1.131:8090/api/v1/query | jq  
-```
+curl --data-urlencode 'query=up{}' <http://10.0.1.131:8090/api/v1/query> | jq  
 
 Above prometheus-community/prometheus version has problem with kind ServiceMonitor, so I'll try next version kube-prometheus-stack:  
 
@@ -322,9 +320,7 @@ kubectl --address localhost,10.0.1.131 -n monitoring port-forward svc/prometheus
 
 Test again from outside:  
 
-```plaintext:
-curl --data-urlencode 'query=up{}' http://10.0.1.131:32090/api/v1/query | jq
-```
+curl --data-urlencode 'query=up{}' <http://10.0.1.131:32090/api/v1/query> | jq  
 
 We have some access problems to be fixed:
 
@@ -403,14 +399,41 @@ First let's check default values:
 helm pull haproxy-ingress/haproxy-ingress  
 
 ```plaintext:
-helm install haproxy-ingress haproxy-ingress/haproxy-ingress --create-namespace --namespace ingress-controller --version 0.12.0 --set controller.hostNetwork=true --set controller.stats.enabled=true --set controller.metrics.enabled=true --set controller.serviceMonitor.enabled=true
+helm install haproxy-ingress haproxy-ingress/haproxy-ingress --create-namespace --namespace ingress-controller --version 0.12.0 --set controller.hostNetwork=true --set controller.stats.enabled=true --set controller.metrics.enabled=true --set controller.serviceMonitor.enabled=true --set-string controller.metrics.service.annotations."prometheus\.io/port"="9101" --set-string controller.metrics.service.annotations."prometheus\.io/scrape"="true"
 ```
 
-First test haproxy metrics api:  
+Test haproxy metrics api:  
 
-```plaintext:
-curl -i http://10.104.136.22:9101/metrics
-```
+curl -i <http://10.104.136.22:9101/metrics>  
 
 Install Haproxy configmap:  
 kubectl apply -f haproxy-configmap.yaml  
+
+Check servicemonitor:  
+kubectl get servicemonitors -n ingress-controller  
+NAME              AGE  
+haproxy-ingress   87s  
+
+Check haproxy annotations:  
+kubectl describe service haproxy-ingress-metrics -n ingress-controller | grep prometheus  
+prometheus.io/port: 9101  
+prometheus.io/scrape: true  
+
+Update prometheus with haproxy scape configs:  
+
+```plaintext:
+helm upgrade --reuse-values -f custom-prometheus-values2.yaml prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
+Release "prometheus-stack" has been upgraded. Happy Helming!
+```
+
+--reuse-values will merge additional custom values to chart and keep previous settings in placce
+--reset-values would reset all values back to default values.yaml chart except those provided by custom chart  
+
+Test if you can see haproxy-ingress and haproxy-exporter up:
+curl --data-urlencode 'query=up{}' <http://10.0.1.131:32090/api/v1/query> | jq  
+
+Alternatively you can point browser to <http://http://10.0.1.131:32090/targets> and check if above targets are grean.  
+
+If ok, you can now use all haproxy_ related functions to query metrics.  
+
+## Lens K8s monitoring

@@ -1,0 +1,37 @@
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: haproxy-ingress 
+        scrape_interval: 10s
+        scrape_timeout: 10s
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+              - ingress-controller 
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+          regex: haproxy-ingress
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_container_port_number]
+          regex: 10254
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          target_label: hostname
+      - job_name: haproxy-exporter
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - ingress-controller
+        params:
+          scope: [global,frontend,backend]
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+          regex: haproxy-ingress
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_container_port_number]
+          regex: 9101
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          target_label: hostname
