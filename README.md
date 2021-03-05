@@ -463,4 +463,8 @@ falcosecurity/falcosidekick  0.2.9        2.21.0     A simple daemon to help you
 Check Falco default values:  
 helm pull falcosecurity/falco
 
+To be continued...
+
+## Manage Kubernetes secrets
+
 To be continued...  
