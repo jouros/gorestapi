@@ -2,7 +2,7 @@
 
 My personal Go playground.  
 
-REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3 and plenty of admin tricks.
+REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3, Lens and plenty of admin tricks.
 
 ## K8s installation
 
@@ -437,3 +437,10 @@ Alternatively you can point browser to <http://http://10.0.1.131:32090/targets> 
 If ok, you can now use all haproxy_ related functions to query metrics.  
 
 ## Lens K8s monitoring
+
+Download Lens: <https://github.com/lensapp/lens/releases/tag/v4.1.4>
+Install: sudo apt install ./Lens-4.1.4.amd64.deb
+
+Copy ~/.kube/config of the remote Kubernetes host to your local dir.  
+
+Add cluster to Lens by giving path to above config.  
