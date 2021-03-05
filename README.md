@@ -2,7 +2,7 @@
 
 My personal Go playground.  
 
-REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3 and plenty of admin trics.
+REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3 and plenty of admin tricks.
 
 ## K8s installation
 
