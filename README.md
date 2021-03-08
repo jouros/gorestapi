@@ -445,9 +445,60 @@ Copy ~/.kube/config of the remote Kubernetes host to your local dir.
 
 Add cluster to Lens by giving path to above config.  
 
+## Install krew
+
+Krew is kubectl pluging to find and get other kubectl plugins.  
+
+Install info: <https://krew.sigs.k8s.io/docs/user-guide/setup/install/>
+
+curl -fsSLO "<https://github.com/kubernetes-sigs/krew/releases/latest/download/krew.tar.gz>"
+
+tar zxvf krew.tar.gz  
+
+./krew-linux_amd64 install krew
+
+## Kubernetes RBAC
+
+ServiceAccount: Communication with kube api server if you do not specify a service account, it is automatically assigned the default service account:  
+kubectl get pod testcurl -o yaml | grep 'serviceAccount'  
+  serviceAccount: default  
+  serviceAccountName: default  
+
+Default namespace does not have anyt other ServiceAccounts:  
+kubectl get serviceaccounts -n default  
+NAME      SECRETS   AGE  
+default   1         86d  
+
+While in ingress-controller namespace we have:  
+kubectl get serviceaccounts -n ingress-controller  
+NAME              SECRETS   AGE  
+default           1         3d1h  
+haproxy-ingress   1         3d1h  
+
+Role: Set permissions within namespace:  
+  apiGroups: kubectl api-resources -o wide  
+  resources: target objects, eg. configmaps, pods, secrets, namespaces  
+  verbs: what you can do with ohject, eg. get, create, update, watch, list, patch, delete, deletecollection  
+
+Cluster role: Set cluster wide permissions.  
+
+Role binding: Link ServiceAccount and Role together: roleRef + subjects  
+
+Cluster role binding: Grant cluster wide access: roleRef + subjects
+
+Let's install rbac-lookup: kubectl krew install rbac-lookup  
+
+kubectl-rbac_lookup system:kube-proxy  
+SUBJECT              SCOPE          ROLE  
+system:kube-proxy    cluster-wide   ClusterRole/system:node-proxier  
+
 ## Kubernetes Auditing
 
-To be continued...  
+In audit-policy.yaml first ruleset is levels:  
+none: don't log events  
+Metadata: log request metadata  
+Request:  log event metadata and request body  
+RequestResponse: log event metadata, request and response bodies  
 
 ## Deploy Falco security
 
