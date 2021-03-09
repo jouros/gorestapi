@@ -2,7 +2,7 @@
 
 My personal Go playground.  
 
-REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3, Lens and plenty of admin tricks.
+REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3, Lens, Krew, RBAC, Falco, Secrets management, GitOps and plenty of admin tricks.
 
 ## K8s installation
 
@@ -482,23 +482,110 @@ Role: Set permissions within namespace:
 
 Cluster role: Set cluster wide permissions.  
 
-Role binding: Link ServiceAccount and Role together: roleRef + subjects  
+Role binding: Link ServiceAccount and Role together: roleRef (kind, name, apiGroup) + subjects (entity that will make operations)
 
 Cluster role binding: Grant cluster wide access: roleRef + subjects
 
+Default roles in Kubernetes are: view, edit, admin, cluster-admin
+
+For example:
+kubectl get serviceAccounts -n ingress-controller  
+NAME              SECRETS   AGE  
+default           1         3d23h  
+haproxy-ingress   1         3d23h  
+
+We have haproxy-ingress serviceAccount in ingress-controller namespace
+
 Let's install rbac-lookup: kubectl krew install rbac-lookup  
 
-kubectl-rbac_lookup system:kube-proxy  
-SUBJECT              SCOPE          ROLE  
-system:kube-proxy    cluster-wide   ClusterRole/system:node-proxier  
+haproxy-ingress has ClusterRole haproxy-ingress:  
+
+kubectl-rbac_lookup haproxy-ingress  
+SUBJECT            SCOPE                ROLE  
+haproxy-ingress    ingress-controller   Role/haproxy-ingress  
+haproxy-ingress    ingress-controller   Role/haproxy-ingress  
+haproxy-ingress    cluster-wide         ClusterRole/haproxy-ingress  
+haproxy-ingress    cluster-wide         ClusterRole/haproxy-ingress  
+
+Other userful commands:
+kubectl-rbac_lookup --kind user  
+kubectl-rbac_lookup --kind group
+
+haproxy-ingress ClusterRole is granted to:
+
+```plaintext:
+kubectl describe clusterrole haproxy-ingress
+Name:         haproxy-ingress
+Labels:       app.kubernetes.io/instance=haproxy-ingress
+              app.kubernetes.io/managed-by=Helm
+              app.kubernetes.io/name=haproxy-ingress
+              app.kubernetes.io/version=v0.12
+              helm.sh/chart=haproxy-ingress-0.12.0
+Annotations:  meta.helm.sh/release-name: haproxy-ingress
+              meta.helm.sh/release-namespace: ingress-controller
+PolicyRule:
+  Resources                           Non-Resource URLs  Resource Names  Verbs
+  ---------                           -----------------  --------------  -----
+  events                              []                 []              [create patch]
+  services                            []                 []              [get list watch]
+  ingressclasses.extensions           []                 []              [get list watch]
+  ingresses.extensions                []                 []              [get list watch]
+  ingressclasses.networking.k8s.io    []                 []              [get list watch]
+  ingresses.networking.k8s.io         []                 []              [get list watch]
+  nodes                               []                 []              [list watch get]
+  configmaps                          []                 []              [list watch]
+  endpoints                           []                 []              [list watch]
+  pods                                []                 []              [list watch]
+  secrets                             []                 []              [list watch]
+  ingresses.extensions/status         []                 []              [update]
+  ingresses.networking.k8s.io/status  []                 []              [update]
+```
+
+So from above we can see that user haproxy-ingress can list and watch pods, you can verify same info with can-i:  
+kubectl auth can-i list pods --as haproxy-ingress  
+yes  
+
+Can user haproxy-ingress delete pods?
+kubectl auth can-i delete pods --as haproxy-ingress
+no
+
+With rakkess we can inspect authorizations granted to user:  
+kubectl krew install access-matrix
+
+To get full list of grants for serviceAccount haproxy-ingress: kubectl access-matrix -n ingress-controller --as haproxy-ingress  
+
+With kubectl-who-can we can find subjects that can perform a spesific action:  
+kubectl krew install who-can
+
+For example subjects that can list pods in ingress-controller namespace:
+kubectl who-can list pods -n ingress-controller
 
 ## Kubernetes Auditing
 
-In audit-policy.yaml first ruleset is levels:  
+In Kubernetes auditing first we need to define audit policy that will define rules what will be recorded and what data will be included. In audit-policy.yaml defined audit levels are:  
 none: don't log events  
 Metadata: log request metadata  
 Request:  log event metadata and request body  
 RequestResponse: log event metadata, request and response bodies  
+
+## Kubernetes disaster recovery, how to re-install cluster
+
+kubeadm reset: clean up files that were created by kubeadm init or join. When executed in control-plane node, wipes out all info from previous cluster and print out join info to new cluster. You have to re-join all worker nodes by executing kudeadm reset + kubeadm join printed out.
+
+In my setup I did reset on all nodes, kubeadm init on control-plane and join on worker nodes. I also had to execute below in every node:  
+cat <<EOF | sudo tee /etc/modules-load.d/crio.conf
+overlay
+br_netfilter
+EOF
+
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+All labels are wiped out, so I had to re-label.  
+
+I got this error: "failed to set bridge addr: "cni0" already has an IP address" for some starting Pod. I checked which node Pod was running and executed in that node:  
+sudo ip link set cni0 down  
+sudo brctl delbr cni0
 
 ## Deploy Falco security
 
@@ -519,3 +606,7 @@ To be continued...
 ## Manage Kubernetes secrets
 
 To be continued...  
+
+## Kubernetes GitOps
+
+To be continued...
