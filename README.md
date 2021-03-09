@@ -568,6 +568,41 @@ Metadata: log request metadata
 Request:  log event metadata and request body  
 RequestResponse: log event metadata, request and response bodies  
 
+Set audit backend for kube-apiserver:
+
+Add /etc/kubernetes/maniifests/kube-apiserver.yaml:
+    - kube-apiserver
+    - --audit-log-path=/var/log/audit.log
+    - --audit-log-maxage=5
+    - --audit-log-maxbackup=5
+    - --audit-log-maxsize=1
+    - --audit-log-truncate-enabled
+    - --audit-policy-file=/etc/kubernetes/audit-policy.yaml
+
+Set mount options for audit:
+
+```plaintext:
+    volumeMounts:
+    - mountPath: /etc/kubernetes/audit-policy.yaml
+      name: audit
+      readOnly: true
+    - mountPath: /var/log/audit.log
+      name: audit-log
+      readOnly: false
+
+  volumes: 
+  - hostPath:
+      path: /etc/kubernetes/audit-policy.yaml 
+      type: File
+    name: audit
+  - hostPath:
+      path: /var/log/audit.log
+      type: FileOrCreate
+    name: audit-log
+```
+
+kube-apiserver will watch for config changes and reload automatically.
+
 ## Kubernetes disaster recovery, how to re-install cluster
 
 kubeadm reset: clean up files that were created by kubeadm init or join. When executed in control-plane node, wipes out all info from previous cluster and print out join info to new cluster. You have to re-join all worker nodes by executing kudeadm reset + kubeadm join printed out.
