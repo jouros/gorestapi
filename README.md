@@ -2,7 +2,7 @@
 
 My personal Go playground.  
 
-REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3, Lens, Krew, RBAC, Falco, Secrets management, GitOps and plenty of admin tricks.
+REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3, Lens, Krew, RBAC, Auditing, Falco, SOPS,Flux v2 and plenty of admin tricks.
 
 ## K8s installation
 
@@ -12,14 +12,6 @@ kubectl apply -f gorestapi-deployment.yaml
 
 kubectl apply -f gorestapi-svc.yaml  
 
-cmd line api testing (first version of restapi app):  
-
-curl -i <http://127.0.0.1:8080/ping>  
-
-curl -i -H "Content-type: application/json" -d '{"title":"Hello","post":"World"}' <http://127.0.0.1:8080/newsfeed>  
-
-curl -i <http://127.0.0.1:8080/newsfeed>  
-
 K8s cmd line testing:  
 kubectl get svc  
 
@@ -28,15 +20,6 @@ NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
 gorestapi    ClusterIP   10.110.175.227   <none>        8080/TCP   4m55s  
 kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP    58d
 ```
-
-Check if app is responding:  
-curl -i <http://10.110.175.227:8080/ping>  
-HTTP/1.1 200 OK  
-Content-Type: application/json; charset=utf-8  
-Date: Mon, 08 Feb 2021 13:49:24 GMT  
-Content-Length: 20  
-
-{"hello":"Found me"}  
 
 ## MetalLB loadbalancer installation
 
@@ -75,7 +58,7 @@ kubectl apply -f config.yaml
 
 Test IP routing: Change gorestapi-svc.yaml type: ClusterIP => type: LoadBalancer  
 
-Check if app gets routable external ip:  
+Check if app gets routable external ip (type: LoadBalancer):  
 kubectl get svc  
 
 ```plaintext:
@@ -84,23 +67,11 @@ gorestapi    LoadBalancer   10.110.175.227   10.0.1.245    8080:32370/TCP   9m19
 kubernetes   ClusterIP      10.96.0.1        <none>        443/TCP          58d  
 ```
 
-Test from outside:  
-
-```plaintext:
-  curl -i <http://10.0.1.245:8080/ping>
-  HTTP/1.1 200 OK
-  Content-Type: application/json; charset=utf-8
-  Date: Mon, 08 Feb 2021 13:56:31 GMT
-  Content-Length: 20
-
-  {"hello":"Found me"}
-```
-
-## Install haproxy-ingress controller
+## Install haproxy-ingress controller non Helm version
 
 More info: <https://github.com/jcmoraisjr/haproxy-ingress/tree/master/examples/deployment>
 
-Label nodes 1-3 (I have 4 worker nodes):  
+Label nodes 1-3 to mark them for ingress-controller (I have 4 worker nodes):  
   kubectl label node worker1 role=ingress-controller
   node/worker1 labeled  
   kubectl label node worker2 role=ingress-controller
@@ -141,20 +112,9 @@ kubectl apply -f gorestapi-ingress.yaml
 
 Now we have MetalLB to give static IP 10.0.1.248 to Haproxy which is Watching for ingress class 'haproxy' to route traffic to restapi Pod port 8080.  
 
-Test from outside of K8s:  
-
-curl -i <http://10.0.1.248:8080/ping>  
-HTTP/1.1 200 OK  
-content-type: application/json; charset=utf-8  
-date: Tue, 09 Feb 2021 13:05:32 GMT  
-content-length: 20  
-strict-transport-security: max-age=15768000  
-
-{"hello":"Found me"}  
-
 ## Postgres DB installation
 
-Note! This is only for my playground, I'm not using persistent volumes here.  
+Note! This setup is only for my playground, so I'm not using persistent volumes here.  
 
 kubectl apply -f postgres-configmap.yaml  
 
@@ -173,11 +133,11 @@ psql -h 10.0.1.204 -U admin --password -p 32531 omadb
 Password:
 omadb=# quit  
 
-At this stage, I developed second version of go app with Postgres db connection.
-
 ## Wait for postgres connection with initContainer
 
-Get script:  
+Problem: if gorestapi start before db is ready, it will fail, so we have to wait and check until Postgress is online.
+
+Get wait-for-it script:  
 git clone <https://github.com/bells17/wait-for-it-for-busybox>  
 
 Create configmap:  
@@ -197,7 +157,7 @@ kubectl logs gorestapi-566b5db78b-z87qt -c wait-for-postgres
 wait-for-it.sh: waiting for postgres:5432 without a timeout  
 wait-for-it.sh: postgres:5432 is available after 0 seconds  
 
-## Special notes
+## Special notes for Dockerfile and non Helm Haproxy version
 
 In Dockerfile:  
 RUN go get github.com/golang-migrate/migrate/v4/database/postgres  
@@ -248,7 +208,7 @@ http-log-format: "%ci:%cp\\ method=%HM\\ uri=%HU\\ rcvms=%TR\\ serverms=%Tr\\ ac
 %B  = bytes_read  
 %ST = status_code  
 
-In this demo I had two different sidecar alternatives for collecting haproxy logs: rsyslog and netcat. Here's rsyslog example:  
+In this non Helm Haproxy demo I had two different sidecar alternatives for collecting haproxy logs: rsyslog and netcat. Here's rsyslog example:  
 kubectl logs -f haproxy-ingress-bnn7s -n ingress-controller -c access-logs  
 
 ```plaintext:
@@ -258,7 +218,7 @@ kubectl logs -f haproxy-ingress-bnn7s -n ingress-controller -c access-logs
 
 ## Installing Prometheus with Helm 3
 
-Note! Here is first tested Prometheus helm version, I changed version later.
+Note! Here is first tested Prometheus helm version prometheus-community/prometheus, I changed version couple steps later because it was missing Servicemonitor.
 
 I don't have storage in my demo lab, so I need to disable peristentVolumeClaims:
 
@@ -306,7 +266,7 @@ Test from outside of cluster (that query will list all K8s resources):
 
 curl --data-urlencode 'query=up{}' <http://10.0.1.131:8090/api/v1/query> | jq  
 
-Above prometheus-community/prometheus version has problem with kind ServiceMonitor, so I'll try next version kube-prometheus-stack:  
+Above prometheus-community/prometheus version has problem with kind ServiceMonitor, so I'll try next version prometheus-community/kube-prometheus-stack:  
 
 ```plaintext:
 helm install prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring --set prometheusOperator.hostNetwork=true --set defaultRules.rules.kubernetesStorage=false --set prometheusOperator.tls.internalPort=10251
@@ -322,7 +282,7 @@ Test again from outside:
 
 curl --data-urlencode 'query=up{}' <http://10.0.1.131:32090/api/v1/query> | jq  
 
-We have some access problems to be fixed:
+We have some Prometheus access problems to be fixed:
 
 1. Prometheus is trying to get kube controller manager metrics from deprecated port 10252, new port is 10259  
 2. Same as above with kube scheduler, prome is trying deprecated port 10251, new port is 10257  
@@ -330,10 +290,9 @@ We have some access problems to be fixed:
 4. Prometheus is trying to access etcd from <http://masterip:2379>, but as we can see from above, etcd is offering https connection
 5. Prometheus is trying to access kube-proxy metrics from masterip:10249 when it's available in localhost:10249
 
-I'll use haproxy to fix above problems 1-3. I made custom build jrcjoro1/haproxy-fix that will redirect prometheus scrape to correct Pod localhost.
+I'll use haproxy to fix above problems 1-3. I made custom build jrcjoro1/haproxy-fix that will redirect prometheus scrape to right place.  
 
 For testing haproxy-fix redirect, I used curl-test.yaml:
-
 kubectl apply -f haproxy-fix-deployment.yaml  
 kubectl apply -f curl-test.yaml
 
@@ -344,7 +303,7 @@ sudo curl --cert /etc/kubernetes/pki/etcd/peer.crt --key /etc/kubernetes/pki/etc
 {"health":"true"}
 ```
 
-Create Prometheus secret etcd-client:  
+Create Prometheus secret etcd-client with script:  
 ./generate_prome_etcd_auth.sh  
 secret/etcd-client created  
 NAME          TYPE     DATA   AGE  
@@ -352,10 +311,11 @@ etcd-client   Opaque   3      0s
 
 Re-install prometheus-stack with etcd auth secret:  
 
+Uninstall:  
 helm uninstall prometheus-stack -n monitoring  
 release "prometheus-stack" uninstalled  
 
-Complete wipeout:
+Complete wipeout:  
 kubectl delete ns monitoring  
 
 Re-install etcd secrets:  
@@ -383,11 +343,12 @@ Now Prometheus can discover all targets :)
 
 ## Re-install haproxy with helm and monitoring
 
-First remove old non Helm installation:  
+First remove non Helm installation:  
 kubectl delete -f haproxy-ingress-deployment.yaml  
 kubectl delete -f haproxy-svc.yaml  
 kubectl delete ns ingress-controller  
 
+Search for haproxy:  
 helm search repo haproxy-ingress
 
 ```plaintext:
@@ -395,15 +356,16 @@ NAME                            CHART VERSION APP VERSION DESCRIPTION
 haproxy-ingress/haproxy-ingress 0.12.0        v0.12       Ingress controller for HAProxy loadbalancer  
 ```
 
-First let's check default values:  
+Check default values:  
 helm pull haproxy-ingress/haproxy-ingress  
+
+Install:  
 
 ```plaintext:
 helm install haproxy-ingress haproxy-ingress/haproxy-ingress --create-namespace --namespace ingress-controller --version 0.12.0 --set controller.hostNetwork=true --set controller.stats.enabled=true --set controller.metrics.enabled=true --set controller.serviceMonitor.enabled=true --set-string controller.metrics.service.annotations."prometheus\.io/port"="9101" --set-string controller.metrics.service.annotations."prometheus\.io/scrape"="true"
 ```
 
 Test haproxy metrics api:  
-
 curl -i <http://10.104.136.22:9101/metrics>  
 
 Install Haproxy configmap:  
@@ -426,17 +388,20 @@ helm upgrade --reuse-values -f custom-prometheus-values2.yaml prometheus-stack p
 Release "prometheus-stack" has been upgraded. Happy Helming!
 ```
 
---reuse-values will merge additional custom values to chart and keep previous settings in placce
---reset-values would reset all values back to default values.yaml chart except those provided by custom chart  
+Some notes about helm flags:  
+'reuse-values' will merge additional custom values to chart and keep previous settings in place.  
+'reset-values' would reset all values back to default values.yaml chart except those provided by custom chart.  
 
-Test if you can see haproxy-ingress and haproxy-exporter up:
+Test if you can see haproxy-ingress and haproxy-exporter up:  
 curl --data-urlencode 'query=up{}' <http://10.0.1.131:32090/api/v1/query> | jq  
 
 Alternatively you can point browser to <http://http://10.0.1.131:32090/targets> and check if above targets are grean.  
 
-If ok, you can now use all haproxy_ related functions to query metrics.  
+If ok, you can now use all haproxy_ related Prometheus functions to query metrics.  
 
 ## Lens K8s monitoring
+
+Lens is very nice graphical user interface for K8s cluster.  
 
 Download Lens: <https://github.com/lensapp/lens/releases/tag/v4.1.4>
 Install: sudo apt install ./Lens-4.1.4.amd64.deb
@@ -447,7 +412,7 @@ Add cluster to Lens by giving path to above config.
 
 ## Install krew
 
-Krew is kubectl pluging to find and get other kubectl plugins.  
+Krew is kubectl plugin to find and get other kubectl plugins.  
 
 Install info: <https://krew.sigs.k8s.io/docs/user-guide/setup/install/>
 
@@ -495,6 +460,8 @@ default           1         3d23h
 haproxy-ingress   1         3d23h  
 
 We have haproxy-ingress serviceAccount in ingress-controller namespace
+
+rbac-lookup: <https://github.com/FairwindsOps/rbac-lookup>  
 
 Let's install rbac-lookup: kubectl krew install rbac-lookup  
 
@@ -549,6 +516,8 @@ Can user haproxy-ingress delete pods?
 kubectl auth can-i delete pods --as haproxy-ingress
 no
 
+Rakkess: <https://github.com/corneliusweig/rakkess>  
+
 With rakkess we can inspect authorizations granted to user:  
 kubectl krew install access-matrix
 
@@ -562,15 +531,16 @@ kubectl who-can list pods -n ingress-controller
 
 ## Kubernetes Auditing
 
-In Kubernetes auditing first we need to define audit policy that will define rules what will be recorded and what data will be included. In audit-policy.yaml defined audit levels are:  
+In Kubernetes auditing first we need to define audit policy that will define rules of what will be recorded and what data will be included. We will use audit-policy.yaml for that:  
 none: don't log events  
 Metadata: log request metadata  
 Request:  log event metadata and request body  
 RequestResponse: log event metadata, request and response bodies  
 
-Set audit backend for kube-apiserver:
+Then we need to set audit backend by adding some configurations to kube-apiserver:
+/etc/kubernetes/maniifests/kube-apiserver.yaml:
 
-Add /etc/kubernetes/maniifests/kube-apiserver.yaml:
+```plaintext:
     - kube-apiserver
     - --audit-log-path=/var/log/audit.log
     - --audit-log-maxage=5
@@ -578,6 +548,7 @@ Add /etc/kubernetes/maniifests/kube-apiserver.yaml:
     - --audit-log-maxsize=1
     - --audit-log-truncate-enabled
     - --audit-policy-file=/etc/kubernetes/audit-policy.yaml
+```
 
 Set mount options for audit:
 
@@ -605,9 +576,15 @@ kube-apiserver will watch for config changes and reload automatically.
 
 ## Kubernetes disaster recovery, how to re-install cluster
 
-kubeadm reset: clean up files that were created by kubeadm init or join. When executed in control-plane node, wipes out all info from previous cluster and print out join info to new cluster. You have to re-join all worker nodes by executing kudeadm reset + kubeadm join printed out.
+If things get badly wrong, sometimes fastest way back is to re-install cluster state.  
 
-In my setup I did reset on all nodes, kubeadm init on control-plane and join on worker nodes. I also had to execute below in every node:  
+kubeadm reset: clean up files that were created by kubeadm init or join. When executed in control-plane node, wipes out all info from previous cluster and print out join info to new cluster.  
+
+kubeadm init: Initailize new cluster state. New config files will be created.  
+
+kebeadm join: You have to re-join all worker nodes by executing kudeadm reset + kubeadm join.  
+
+In my setup I did reset on all nodes, kubeadm init on control-plane and join on worker nodes. I also had to execute some additional commands in every node:  
 cat <<EOF | sudo tee /etc/modules-load.d/crio.conf
 overlay
 br_netfilter
@@ -616,13 +593,17 @@ EOF
 sudo modprobe overlay
 sudo modprobe br_netfilter
 
-All labels are wiped out, so I had to re-label.  
+All labels are wiped out, so I had to re-label my cluster nodes for haproxy-ingress.  
 
-I got this error: "failed to set bridge addr: "cni0" already has an IP address" for some starting Pod. I checked which node Pod was running and executed in that node:  
+I got this error: "failed to set bridge addr: "cni0" already has an IP address" for some starting Pod. I executed below commands in every node:  
 sudo ip link set cni0 down  
-sudo brctl delbr cni0
+sudo brctl delbr cni0  
+
+Finally I rebooted control-plane node and cluster was back in business.  
 
 ## Deploy Falco security
+
+Falco is security event detection tool was K8s.  
 
 helm repo add falcosecurity <https://falcosecurity.github.io/charts>  
 "falcosecurity" has been added to your repositories  
@@ -638,10 +619,10 @@ helm pull falcosecurity/falco
 
 To be continued...
 
-## Manage Kubernetes secrets
+## Manage Kubernetes secrets with SOPS
 
 To be continued...  
 
-## Kubernetes GitOps
+## Kubernetes GitOps with Flux v2
 
 To be continued...
