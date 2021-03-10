@@ -537,6 +537,8 @@ Metadata: log request metadata
 Request:  log event metadata and request body  
 RequestResponse: log event metadata, request and response bodies  
 
+For kube-apiserver testing purpose, I will use minimal-audit-policy.yaml which will log everything in metadata level. Logs will be in JSON format.  
+
 Then we need to set audit backend by adding some configurations to kube-apiserver:
 /etc/kubernetes/maniifests/kube-apiserver.yaml:
 

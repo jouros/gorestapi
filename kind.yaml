@@ -1,0 +1,31 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+kubeadmConfigPatches:
+- |
+  kind: ClusterConfiguration
+  metadata:
+	name: config
+  apiServer:
+	extraArgs:
+    "audit-log-path": "/var/log/audit.json"
+    "audit-log-maxage": "5"
+    "audit-log-maxbackup": "1"
+    "audit-log-maxsize": "1"
+    "audit-log-truncate-enabled": ""
+	  "audit-policy-file": "/etc/kubernetes/audit-policy.yaml"
+	extraVolumes:
+	- name: "audit"
+	  hostPath: "/etc/kubernetes/audit-policy.yaml"
+	  mountPath: "/etc/kubernetes/audit-policy.yaml"
+	  readOnly: true 
+	  pathType: File
+  - name: "audit-log"
+    hostPath: "/var/log/audit.log"
+    mountPath: "/var/log/audit.log"
+    readOnly: false
+    pathType: FileOrCreate
+nodes:
+- role: control-plane
+  extraMounts:
+  - hostPath: /home/joro/kindmnt
+	containerPath: /media/host
