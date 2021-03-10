@@ -540,7 +540,7 @@ RequestResponse: log event metadata, request and response bodies
 For kube-apiserver testing purpose, I will use minimal-audit-policy.yaml which will log everything in metadata level. Logs will be in JSON format.  
 
 Then we need to set audit backend by adding some configurations to kube-apiserver:
-/etc/kubernetes/maniifests/kube-apiserver.yaml:
+/etc/kubernetes/manifests/kube-apiserver.yaml:
 
 ```plaintext:
     - kube-apiserver
@@ -574,7 +574,11 @@ Set mount options for audit:
     name: audit-log
 ```
 
-kube-apiserver will watch for config changes and reload automatically.
+kube-apiserver will watch for config changes and reload automatically. In case you need to restart, e.g. reload configs etc., kube-apiserver you need to delete it and new Pod will be cretaed automatically:  
+kubectl delete pod/kube-apiserver-master1 -n kube-system  
+
+If you set - --audit-log-path=- you can get logs with:  
+kubectl logs kube-apiserver-master1 -n kube-system
 
 ## Kubernetes disaster recovery, how to re-install cluster
 
