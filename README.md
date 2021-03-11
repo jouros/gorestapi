@@ -544,7 +544,7 @@ Then we need to set audit backend by adding some configurations to kube-apiserve
 
 ```plaintext:
     - kube-apiserver
-    - --audit-log-path=/var/log/audit.log
+    - --audit-log-path=/var/log/kube-audit/audit.json
     - --audit-log-maxage=5
     - --audit-log-maxbackup=5
     - --audit-log-maxsize=1
@@ -559,7 +559,7 @@ Set mount options for audit:
     - mountPath: /etc/kubernetes/audit-policy.yaml
       name: audit
       readOnly: true
-    - mountPath: /var/log/audit.log
+    - mountPath: /var/log/kube-audit
       name: audit-log
       readOnly: false
 
@@ -569,16 +569,18 @@ Set mount options for audit:
       type: File
     name: audit
   - hostPath:
-      path: /var/log/audit.log
-      type: FileOrCreate
+      path: /var/log/kube-audit
+      type: DirectoryOrCreate
     name: audit-log
 ```
+
+Above config will create dir /var/log/kube-audit where log files will be created. You can follow files with tail -f /var/log/kube-audit/audit.json | jq  
 
 kube-apiserver will watch for config changes and reload automatically. In case you need to restart, e.g. reload configs etc., kube-apiserver you need to delete it and new Pod will be cretaed automatically:  
 kubectl delete pod/kube-apiserver-master1 -n kube-system  
 
-If you set - --audit-log-path=- you can get logs with:  
-kubectl logs kube-apiserver-master1 -n kube-system
+If you set - --audit-log-path=- all logs will go to stdout and you can follow logs with:  
+kubectl logs -f kube-apiserver-master1 -n kube-system
 
 ## Kubernetes disaster recovery, how to re-install cluster
 
