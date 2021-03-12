@@ -591,7 +591,7 @@ kubectl delete pod/kube-apiserver-master1 -n kube-system
 If you set - --audit-log-path=- all logs will go to stdout and you can follow logs with:  
 kubectl logs -f kube-apiserver-master1 -n kube-system
 
-Repository audit-policy.yaml is just a starting point which you can use to define what events to wan't to be logged and what are just continuous high volume events.
+Repository audit-policy.yaml is just a starting point which you can use to define what events to wan't to be logged and what are just continuous high volume events.  
 
 ## Kubernetes disaster recovery, how to re-install cluster
 
