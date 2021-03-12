@@ -531,11 +531,20 @@ kubectl who-can list pods -n ingress-controller
 
 ## Kubernetes Auditing
 
-In Kubernetes auditing first we need to define audit policy that will define rules of what will be recorded and what data will be included. We will use audit-policy.yaml for that:  
+In Kubernetes auditing first we need to define audit policy that will define rules of what will be recorded and what data will be included. We will use audit-policy.yaml for that, level that request is matching:  
 none: don't log events  
 Metadata: log request metadata  
 Request:  log event metadata and request body  
 RequestResponse: log event metadata, request and response bodies  
+
+Structure of audit policy:
+level: none, Metadata, Request, RequestResponse  
+users: serviceAccount
+userGroups:  
+verbs: get, create, update, watch, list, patch, delete
+resources: API groups or group + resources in that group
+namespaces: namespaces that this rule matches.
+nonResourceURLs:  Rules can apply to API resources (such as "pods" or "secrets"), non-resource URL paths (such as "/api"), or neither, but not both. If neither is specified, the rule is treated as a default for all URLs.
 
 For kube-apiserver testing purpose, I will use minimal-audit-policy.yaml which will log everything in metadata level. Logs will be in JSON format.  
 
@@ -576,11 +585,13 @@ Set mount options for audit:
 
 Above config will create dir /var/log/kube-audit where log files will be created. You can follow files with tail -f /var/log/kube-audit/audit.json | jq  
 
-kube-apiserver will watch for config changes and reload automatically. In case you need to restart, e.g. reload configs etc., kube-apiserver you need to delete it and new Pod will be cretaed automatically:  
+kube-apiserver will watch for config changes and reload automatically. If you need to reload configs e.g. new audit-policy.yaml, you need to delete kube-apiserver and new Pod will be created automatically:  
 kubectl delete pod/kube-apiserver-master1 -n kube-system  
 
 If you set - --audit-log-path=- all logs will go to stdout and you can follow logs with:  
 kubectl logs -f kube-apiserver-master1 -n kube-system
+
+Repository audit-policy.yaml is just a starting point which you can use to define what events to wan't to be logged and what are just continuous high volume events.
 
 ## Kubernetes disaster recovery, how to re-install cluster
 
