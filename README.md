@@ -555,7 +555,7 @@ rules:
   - level: Metadata
 ```
 
-Then we need to set audit backend by adding some configurations to kube-apiserver:
+We need to set audit backend by adding some configurations to kube-apiserver:
 /etc/kubernetes/manifests/kube-apiserver.yaml:
 
 ```plaintext:
