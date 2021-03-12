@@ -537,7 +537,7 @@ Metadata: log request metadata
 Request:  log event metadata and request body  
 RequestResponse: log event metadata, request and response bodies  
 
-Structure of audit policy:
+Structure of audit policy:  
 **level**: none, Metadata, Request, RequestResponse  
 **users**: e.g. system:serviceaccount: (singular) is the prefix for service account usernames, system:authenticated all authenticated users. system:unauthenticated all unauthenticated users etc.  
 **userGroups**: e.g. system:serviceaccounts: (plural) is the prefix for service account groups  
