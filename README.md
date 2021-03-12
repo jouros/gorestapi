@@ -447,7 +447,7 @@ Role: Set permissions within namespace:
 
 Cluster role: Set cluster wide permissions.  
 
-Role binding: Link ServiceAccount and Role together: roleRef (kind, name, apiGroup) + subjects (entity that will make operations)
+Role binding: Link ServiceAccount and Role together: roleRef (kind, name, apiGroup) + subjects (entity that will make operations, subjects can be groups, users or ServiceAccounts)  
 
 Cluster role binding: Grant cluster wide access: roleRef + subjects
 
@@ -538,13 +538,13 @@ Request:  log event metadata and request body
 RequestResponse: log event metadata, request and response bodies  
 
 Structure of audit policy:
-level: none, Metadata, Request, RequestResponse  
-users: serviceAccount
-userGroups:  
-verbs: get, create, update, watch, list, patch, delete
-resources: API groups or group + resources in that group
-namespaces: namespaces that this rule matches.
-nonResourceURLs:  Rules can apply to API resources (such as "pods" or "secrets"), non-resource URL paths (such as "/api"), or neither, but not both. If neither is specified, the rule is treated as a default for all URLs.
+**level**: none, Metadata, Request, RequestResponse  
+**users**: e.g. system:serviceaccount: (singular) is the prefix for service account usernames, system:authenticated all authenticated users. system:unauthenticated all unauthenticated users etc.  
+**userGroups**: e.g. system:serviceaccounts: (plural) is the prefix for service account groups  
+**verbs**: get, create, update, watch, list, patch, delete  
+**resources**: API groups or group + resources in that group  
+**namespaces**: namespaces that this rule matches.  
+**nonResourceURLs**:  Rules can apply to API resources (such as "pods" or "secrets"), non-resource URL paths (such as "/api"), or neither, but not both. If neither is specified, the rule is treated as a default for all URLs.  
 
 For kube-apiserver testing purpose, I will use minimal-audit-policy.yaml which will log everything in metadata level. Logs will be in JSON format.  
 
