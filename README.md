@@ -629,7 +629,7 @@ Finally I rebooted control-plane node and cluster was back in business.
 
 ## Deploy Falco security
 
-Falco is security event detection tool was K8s.  
+Falco is security event detection tool for kubernetes.  
 
 helm repo add falcosecurity <https://falcosecurity.github.io/charts>  
 "falcosecurity" has been added to your repositories  
@@ -643,7 +643,11 @@ falcosecurity/falcosidekick  0.2.9        2.21.0     A simple daemon to help you
 Check Falco default values:  
 helm pull falcosecurity/falco
 
-To be continued...
+Install falco:  
+helm install -f custom-falco-values.yaml falco falcosecurity/falco --create-namespace --namespace falco  
+
+Uninstall:  
+helm uninstall falco -n falco  
 
 ## Manage Kubernetes secrets with SOPS
 
