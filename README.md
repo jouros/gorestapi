@@ -546,7 +546,14 @@ Structure of audit policy:
 **namespaces**: namespaces that this rule matches.  
 **nonResourceURLs**:  Rules can apply to API resources (such as "pods" or "secrets"), non-resource URL paths (such as "/api"), or neither, but not both. If neither is specified, the rule is treated as a default for all URLs.  
 
-For kube-apiserver testing purpose, I will use minimal-audit-policy.yaml which will log everything in metadata level. Logs will be in JSON format.  
+For kube-apiserver testing purpose, I will use minimal-audit-policy.yaml which will log everything in metadata level. Logs will be in JSON format:  
+
+```plaintext:
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  - level: Metadata
+```
 
 Then we need to set audit backend by adding some configurations to kube-apiserver:
 /etc/kubernetes/manifests/kube-apiserver.yaml:
