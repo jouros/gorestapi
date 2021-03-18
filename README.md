@@ -649,10 +649,173 @@ helm install -f custom-falco-values.yaml falco falcosecurity/falco --create-name
 Uninstall:  
 helm uninstall falco -n falco  
 
+Falco service IP:  
+kubectl get service/falco -o=jsonpath={.spec.clusterIP} -n falco
+
+For falco we need to set below setting for /etc/kubernetes/manifests/:
+--audit-webhook-config-file=/etc/kubernetes/webhook-config.yaml  
+
 ## Manage Kubernetes secrets with SOPS
 
 To be continued...  
 
 ## Kubernetes GitOps with Flux v2
 
-To be continued...
+First I'll install hub which is a wrapper around git. It's not needed for Flux, so you can skip this step, I installed hub just because we are doing git stuff here with Flux:  
+sudo apt search ^hub$  
+sudo apt install hub  
+
+git config --global hub.protocol https  
+git config --list  
+hub.protocol=https  
+
+Hub will prompt for GitHub username & password the first time it needs to access the API and exchange it for an OAuth token, which it saves in ~/.config/hub  
+
+Set couple env variables for Flux installation, I grab them from above hub installation:  
+export GITHUB_TOKEN=$(cat ~/.config/hub | grep token | awk '{print $2}')  
+export GITHUB_USER=$(cat ~/.config/hub | grep user | awk '{print $3}')  
+
+Download and install flux:  
+curl -s <https://toolkit.fluxcd.io/install.sh> | sudo bash  
+
+Check version:  
+flux --version  
+flux version 0.9.1  
+
+Check flux prerequisities:  
+flux check --pre  
+
+Parameter info:  
+ flux bootstrap github --help  
+
+--owner: Run bootstrap for a public repository on a personal account
+--repository: Repo-name. The bootstrap command creates a repository if one doesn't exist
+--branch: main  
+--private: false. Public repo  
+--personal: true. Personal account
+--path: path in repo  
+
+Install flux:  
+
+```plaintext:
+ flux bootstrap github \
+  --owner=$GITHUB_USER \
+  --repository=flux-test \
+  --branch=main \
+  --private=false \
+  --personal \
+  --path=./cluster/
+  ```
+
+Uninstall:  
+flux uninstall --namespace=flux-system  
+
+Above bootstrap will create github repo 'flux-test' with README.md and .cluster/flux-system with gotk-components.yaml, gotk-sync.yaml and kustomization.yaml and install flux-./cluster deploy key.  Flux will be installed into flux-system namespace:  
+
+```plaintext:
+kubectl get all -n flux-system
+NAME                                          READY   STATUS    RESTARTS   AGE
+pod/helm-controller-7fd55b8c9f-rh6zs          1/1     Running   0          13m
+pod/kustomize-controller-84fdd79d5b-ktsvz     1/1     Running   0          13m
+pod/notification-controller-d9464dbdf-vw99k   1/1     Running   0          13m
+pod/source-controller-798bd8fffb-9gwc9        1/1     Running   0          13m
+
+NAME                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+service/notification-controller   ClusterIP   10.107.206.131   <none>        80/TCP    13m
+service/source-controller         ClusterIP   10.108.28.190    <none>        80/TCP    13m
+service/webhook-receiver          ClusterIP   10.109.183.168   <none>        80/TCP    13m
+
+NAME                                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/helm-controller           1/1     1            1           13m
+deployment.apps/kustomize-controller      1/1     1            1           13m
+deployment.apps/notification-controller   1/1     1            1           13m
+deployment.apps/source-controller         1/1     1            1           13m
+
+NAME                                                DESIRED   CURRENT   READY   AGE
+replicaset.apps/helm-controller-7fd55b8c9f          1         1         1       13m
+replicaset.apps/kustomize-controller-84fdd79d5b     1         1         1       13m
+replicaset.apps/notification-controller-d9464dbdf   1         1         1       13m
+replicaset.apps/source-controller-798bd8fffb        1         1         1       13m
+```
+
+```plaintext:
+kubectl get gitrepositories.source.toolkit.fluxcd.io -A
+NAMESPACE     NAME          URL                                     READY   STATUS                                                            AGE
+flux-system   flux-system   ssh://git@github.com/jouros/flux-test   True    Fetched revision: main/172629f4020fe8181ef10639183845fbd3839b29   16m
+```
+
+Let's deploy podinfo Pod:  
+hub clone flux-test
+Cloning into 'flux-test'...  
+
+Create podinfo:  
+
+```plaintext
+flux create source git podinfo \
+  --url=https://github.com/stefanprodan/podinfo \
+  --branch=master \
+  --interval=30s \
+  --export > ./cluster/podinfo-source.yaml
+```
+
+Above will create:  
+
+```plaintext
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 30s
+  ref:
+    branch: master
+  url: https://github.com/stefanprodan/podinfo
+```
+
+git add .  
+git commit -m "podinfo"  
+hub push origin main  
+
+Create kustomization manifest for podinfo:
+
+```plaintext
+flux create kustomization podinfo \
+  --source=podinfo \
+  --path="./kustomize" \
+  --prune=true \
+  --validation=client \
+  --interval=5m \
+  --export > ./cluster/podinfo-kustomization.yaml
+```
+
+Above will create:  
+
+```plaintext
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  path: ./kustomize
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: podinfo
+  validation: client
+```
+
+cmd 'flux get kustomizations' will applied kustomizations.  
+
+```plaintext
+kubectl -n default get deployments,services podinfo
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/podinfo   2/2     2            2           9m40s
+
+NAME              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+service/podinfo   ClusterIP   10.101.161.71   <none>        9898/TCP,9999/TCP   9m40s
+```

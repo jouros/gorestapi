@@ -1,0 +1,16 @@
+docker:
+  enabled: false
+
+containerd:
+  enabled: false
+
+serviceAccount:
+  name: falcoaccount
+
+auditLog:
+  enabled: true
+
+falco:
+  logLevel: debug
+  webserver:
+    nodePort: 32765 
