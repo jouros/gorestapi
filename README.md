@@ -685,17 +685,19 @@ flux version 0.9.1
 Check flux prerequisities:  
 flux check --pre  
 
+I have repo structure:  
+
 Parameter info:  
  flux bootstrap github --help  
 
---owner: Run bootstrap for a public repository on a personal account
+--owner: Github user
 --repository: Repo-name. The bootstrap command creates a repository if one doesn't exist
 --branch: main  
---private: false. Public repo  
---personal: true. Personal account
---path: path in repo  
+--private: false. This is public repo  
+--personal: true. This is personal account: 'if true, the owner is assumed to be a GitHub user'  
+--path: path in repo relative to repo root. When you have different setups like production, staging etc. or like I have test1, test2 etc. you set path to setup here
 
-Install flux:  
+Bootstrap flux into cluster/overlays/test1:  
 
 ```plaintext:
  flux bootstrap github \
@@ -704,118 +706,52 @@ Install flux:
   --branch=main \
   --private=false \
   --personal \
-  --path=./cluster/
+  --path=./clusters/test1
   ```
 
 Uninstall:  
 flux uninstall --namespace=flux-system  
 
-Above bootstrap will create github repo 'flux-test' with README.md and .cluster/flux-system with gotk-components.yaml, gotk-sync.yaml and kustomization.yaml and install flux-./cluster deploy key.  Flux will be installed into flux-system namespace:  
+Above bootstrap will create github repo 'flux-test' with README.md and ./clusters/test1/flux-system with gotk-components.yaml, gotk-sync.yaml and kustomization.yaml and install repo deploy key.  Flux will be installed into flux-system namespace:  
 
-```plaintext:
-kubectl get all -n flux-system
-NAME                                          READY   STATUS    RESTARTS   AGE
-pod/helm-controller-7fd55b8c9f-rh6zs          1/1     Running   0          13m
-pod/kustomize-controller-84fdd79d5b-ktsvz     1/1     Running   0          13m
-pod/notification-controller-d9464dbdf-vw99k   1/1     Running   0          13m
-pod/source-controller-798bd8fffb-9gwc9        1/1     Running   0          13m
-
-NAME                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
-service/notification-controller   ClusterIP   10.107.206.131   <none>        80/TCP    13m
-service/source-controller         ClusterIP   10.108.28.190    <none>        80/TCP    13m
-service/webhook-receiver          ClusterIP   10.109.183.168   <none>        80/TCP    13m
-
-NAME                                      READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/helm-controller           1/1     1            1           13m
-deployment.apps/kustomize-controller      1/1     1            1           13m
-deployment.apps/notification-controller   1/1     1            1           13m
-deployment.apps/source-controller         1/1     1            1           13m
-
-NAME                                                DESIRED   CURRENT   READY   AGE
-replicaset.apps/helm-controller-7fd55b8c9f          1         1         1       13m
-replicaset.apps/kustomize-controller-84fdd79d5b     1         1         1       13m
-replicaset.apps/notification-controller-d9464dbdf   1         1         1       13m
-replicaset.apps/source-controller-798bd8fffb        1         1         1       13m
-```
-
-```plaintext:
-kubectl get gitrepositories.source.toolkit.fluxcd.io -A
-NAMESPACE     NAME          URL                                     READY   STATUS                                                            AGE
-flux-system   flux-system   ssh://git@github.com/jouros/flux-test   True    Fetched revision: main/172629f4020fe8181ef10639183845fbd3839b29   16m
-```
-
-Let's deploy podinfo Pod:  
-hub clone flux-test
-Cloning into 'flux-test'...  
-
-Create podinfo:  
+Create a source from git repo:  
 
 ```plaintext
 flux create source git podinfo \
-  --url=https://github.com/stefanprodan/podinfo \
-  --branch=master \
+  --url=https://github.com/jouros/flux-test \
+  --branch=main \
   --interval=30s \
-  --export > ./cluster/podinfo-source.yaml
+  --export > ./clusters/test1/test1-source.yaml
 ```
 
-Above will create:  
+Check:  
+kubectl get gitrepositories.source.toolkit.fluxcd.io -A
+or  
+flux get sources git  
 
-```plaintext
----
-apiVersion: source.toolkit.fluxcd.io/v1beta1
-kind: GitRepository
-metadata:
-  name: podinfo
-  namespace: flux-system
-spec:
-  interval: 30s
-  ref:
-    branch: master
-  url: https://github.com/stefanprodan/podinfo
-```
-
-git add .  
-git commit -m "podinfo"  
-hub push origin main  
+```plaintext:
+NAMESPACE     NAME          URL                                     READY   STATUS                                                            AGE
+flux-system   flux-system   ssh://git@github.com/jouros/flux-test   True    Fetched revision: main/e680931682e234b86a2808ba20ac06b3ddbf2784   30m
+flux-system   podinfo       https://github.com/jouros/flux-test     True    Fetched revision: main/e680931682e234b86a2808ba20ac06b3ddbf2784   5m31s
+```  
 
 Create kustomization manifest for podinfo:
 
 ```plaintext
-flux create kustomization podinfo \
+flux create kustomization apps1 \
   --source=podinfo \
-  --path="./kustomize" \
+  --path="./apps/kustomize/test1/podinfo" \
   --prune=true \
   --validation=client \
   --interval=5m \
-  --export > ./cluster/podinfo-kustomization.yaml
+  --export > ./clusters/test1/apps1-kustomization.yaml
 ```
 
-Above will create:  
+Check:  
+flux get kustomizations  
 
-```plaintext
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
-kind: Kustomization
-metadata:
-  name: podinfo
-  namespace: flux-system
-spec:
-  interval: 5m0s
-  path: ./kustomize
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: podinfo
-  validation: client
-```
+At this stage I have podinfo app running with kustomize from here: ./apps/kustomize/test1/podinfo where I changed 'minReplicas' value for cluster setup test1.  
 
-cmd 'flux get kustomizations' will applied kustomizations.  
-
-```plaintext
-kubectl -n default get deployments,services podinfo
-NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/podinfo   2/2     2            2           9m40s
-
-NAME              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
-service/podinfo   ClusterIP   10.101.161.71   <none>        9898/TCP,9999/TCP   9m40s
-```
+Delete:  
+flux delete kustomization apps1  
+flux delete source git podinfo  
