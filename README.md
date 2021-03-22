@@ -724,9 +724,9 @@ flux create source git podinfo \
 In above config source is checked every 30s, if the source changes, the kustomization which is related to that source, will be notified. Above config also refer to spesific branch 'main'.  
 
 Check:  
-kubectl get gitrepositories.source.toolkit.fluxcd.io -A
+kubectl get gitrepositories.source.toolkit.fluxcd.io -A  
 or  
-flux get sources git  
+flux get sources git   
 
 ```plaintext:
 NAMESPACE     NAME          URL                                     READY   STATUS                                                            AGE
