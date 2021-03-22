@@ -734,7 +734,7 @@ flux-system   flux-system   ssh://git@github.com/jouros/flux-test   True    Fetc
 flux-system   podinfo       https://github.com/jouros/flux-test     True    Fetched revision: main/e680931682e234b86a2808ba20ac06b3ddbf2784   5m31s
 ```  
 
-Create kustomization manifest for podinfo:
+Create kustomization manifest for podinfo:  
 --source: source with kind: GitRepository  
 --path: path to the directory containing a kustomization.yaml file  
 --prune: enable garbage collection  
