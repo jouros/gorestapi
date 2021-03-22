@@ -709,12 +709,9 @@ Bootstrap flux into cluster/overlays/test1:
   --path=./clusters/test1
   ```
 
-Uninstall:  
-flux uninstall --namespace=flux-system  
-
 Above bootstrap will create github repo 'flux-test' with README.md and ./clusters/test1/flux-system with gotk-components.yaml, gotk-sync.yaml and kustomization.yaml and install repo deploy key.  Flux will be installed into flux-system namespace:  
 
-Create a source from git repo:  
+A kustomization requires a source. Here the source is git repo 'flux-test', the source just points to that repo. Create a source from git repo:  
 
 ```plaintext
 flux create source git podinfo \
@@ -723,6 +720,8 @@ flux create source git podinfo \
   --interval=30s \
   --export > ./clusters/test1/test1-source.yaml
 ```
+
+In above config source is checked every 30s, if the source changes, the kustomization which is related to that source, will be notified. Above config also refer to spesific branch 'main'.  
 
 Check:  
 kubectl get gitrepositories.source.toolkit.fluxcd.io -A
@@ -736,6 +735,11 @@ flux-system   podinfo       https://github.com/jouros/flux-test     True    Fetc
 ```  
 
 Create kustomization manifest for podinfo:
+--source: source with kind: GitRepository  
+--path: path to the directory containing a kustomization.yaml file  
+--prune: enable garbage collection  
+--validation: client = local dry-run validation, server = APIServer dry-run  
+--interval: The interval at which to retry a previously failed reconciliation  
 
 ```plaintext
 flux create kustomization apps1 \
@@ -747,11 +751,16 @@ flux create kustomization apps1 \
   --export > ./clusters/test1/apps1-kustomization.yaml
 ```
 
+In above config kustomization is related to previously defined source 'podinfo'. Applications are deployded from ./apps/kustomize/test1/podinfo.  
+
 Check:  
 flux get kustomizations  
 
-At this stage I have podinfo app running with kustomize from here: ./apps/kustomize/test1/podinfo where I changed 'minReplicas' value for cluster setup test1.  
+At this stage I have podinfo app running with kustomize where I changed 'minReplicas' value for cluster setup test1.  
 
 Delete:  
 flux delete kustomization apps1  
 flux delete source git podinfo  
+
+Uninstall flux:  
+flux uninstall --namespace=flux-system  
