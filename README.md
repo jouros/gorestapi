@@ -726,7 +726,7 @@ In above config source is checked every 30s, if the source changes, the kustomiz
 Check:  
 kubectl get gitrepositories.source.toolkit.fluxcd.io -A  
 or  
-flux get sources git   
+flux get sources git  
 
 ```plaintext:
 NAMESPACE     NAME          URL                                     READY   STATUS                                                            AGE
@@ -764,3 +764,41 @@ flux delete source git podinfo
 
 Uninstall flux:  
 flux uninstall --namespace=flux-system  
+
+Next I'll add helm GitOps:  
+mkdir ./apps/base/charts/  
+helm create busybox + some editing  
+
+Test:
+helm install busybox ./apps/base/charts/busybox/  
+
+Create flux helm:  
+
+```plaintext:
+flux create hr busybox \
+    --interval=10m \
+    --source=GitRepository/podinfo \
+    --chart=./apps/base/charts/busybox/
+✚ generating HelmRelease
+► applying HelmRelease
+✔ HelmRelease created
+◎ waiting for HelmRelease reconciliation
+✔ HelmRelease busybox is ready
+✔ applied revision 0.1.0
+```
+
+I'm using previously defined git source 'podinfo'.  
+
+check:  
+flux get helmreleases  
+
+```plaintext:
+NAME    READY MESSAGE                           REVISION SUSPENDED 
+busybox True  Release reconciliation succeeded  0.1.0    False
+```
+
+Busybox can also be seen with:  
+helm list -A  
+
+Operations:  
+I changed sleep to 600 in templates/deployment.yaml and version to 0.2.0. After git push, flux updated revision to 0.2.0.  
