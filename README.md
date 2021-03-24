@@ -1,8 +1,8 @@
 # gorestapi
 
-My personal Go playground.  
+My personal Go and K8s playground.  
 
-REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus monitoring, Haproxy, Postgres, Helm 3, Lens, Krew, RBAC, Auditing, Falco, SOPS,Flux v2 and plenty of admin tricks.
+REST api written in Go and K8s deployment: MetalLB loadbalancer, Prometheus, Haproxy, Postgres, Helm 3, Lens, Krew, RBAC, Auditing, Falco, SOPS, Flux v2 and plenty of admin tricks.
 
 ## K8s installation
 
@@ -841,3 +841,7 @@ gotk_reconcile_duration_seconds_count{kind, name, namespace}
 
 e.g. average reconciliation:  
 sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~"default|flux-system", kind=~"Kustomization|HelmRelease"}[5m])) by (kind)  
+
+## Flux with Mozilla SOPS
+
+To be continued...  
