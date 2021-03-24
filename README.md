@@ -812,5 +812,8 @@ By default, Prometheus discovers PodMonitors and ServiceMonitors within its name
 ```
 
 Update Prometheus deployment with above explained values:  
+
+```plaintext:
 helm upgrade --reuse-values prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false  
 Release "prometheus-stack" has been upgraded. Happy Helming!  
+```
