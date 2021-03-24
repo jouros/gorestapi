@@ -3,7 +3,7 @@ kind: PodMonitor
 metadata:
   annotations:
   name: kustomize-controller
-  namespace: prometheus-system
+  namespace: monitoring
   labels:
     release: prometheus-monitoring
 spec:
@@ -22,7 +22,7 @@ kind: PodMonitor
 metadata:
   annotations:
   name: source-controller
-  namespace: prometheus-system
+  namespace: monitoring
   labels:
     release: prometheus-monitoring
 spec:
@@ -41,7 +41,7 @@ kind: PodMonitor
 metadata:
   annotations:
   name: helm-controller
-  namespace: prometheus-system
+  namespace: monitoring
   labels:
     release: prometheus-monitoring
 spec:
@@ -60,7 +60,7 @@ kind: PodMonitor
 metadata:
   annotations:
   name: notification-controller
-  namespace: prometheus-system
+  namespace: monitoring
   labels:
     release: prometheus-monitoring
 spec:
