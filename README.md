@@ -629,6 +629,8 @@ Finally I rebooted control-plane node and cluster was back in business.
 
 ## Deploy Falco security
 
+Note! I have issues with kube-apiserver, so falco deployment is still under development  
+
 Falco is security event detection tool for kubernetes.  
 
 helm repo add falcosecurity <https://falcosecurity.github.io/charts>  
@@ -802,3 +804,13 @@ helm list -A
 
 Operations:  
 I changed sleep to 600 in templates/deployment.yaml and version to 0.2.0. After git push, flux updated revision to 0.2.0.  
+
+## Flux v2 monitoring with  prometheus-community/kube-prometheus-stack
+
+```plaintext:
+By default, Prometheus discovers PodMonitors and ServiceMonitors within its namespace, that are labeled with the same release tag as the prometheus-operator release. Sometimes, you may need to discover custom PodMonitors/ServiceMonitors, for example used to scrape data from third-party applications. An easy way of doing this, without compromising the default PodMonitors/ServiceMonitors discovery, is allowing Prometheus to discover all PodMonitors/ServiceMonitors within its namespace, without applying label filtering. To do so, you can set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues and prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues to false.
+```
+
+Update Prometheus deployment with above explained values:  
+helm upgrade --reuse-values prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false  
+Release "prometheus-stack" has been upgraded. Happy Helming!  
