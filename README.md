@@ -805,7 +805,7 @@ helm list -A
 Operations:  
 I changed sleep to 600 in templates/deployment.yaml and version to 0.2.0. After git push, flux updated revision to 0.2.0.  
 
-## Flux v2 monitoring with  prometheus-community/kube-prometheus-stack
+## Flux v2 monitoring with prometheus-community/kube-prometheus-stack
 
 ```plaintext:
 By default, Prometheus discovers PodMonitors and ServiceMonitors within its namespace, that are labeled with the same release tag as the prometheus-operator release. Sometimes, you may need to discover custom PodMonitors/ServiceMonitors, for example used to scrape data from third-party applications. An easy way of doing this, without compromising the default PodMonitors/ServiceMonitors discovery, is allowing Prometheus to discover all PodMonitors/ServiceMonitors within its namespace, without applying label filtering. To do so, you can set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues and prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues to false.
@@ -826,3 +826,18 @@ helm-controller           49s
 kustomize-controller      49s  
 notification-controller   49s  
 source-controller         49s  
+
+What metrics we can get:  
+Ready status metrics: gotk_reconcile_condition{kind, name, namespace, type="Ready", status="True"}  
+status can be: True, False, Unknown or deleted.  
+
+e.g. number of deployments:  
+sum(gotk_reconcile_condition{namespace=~"default|flux-system", type="Ready", status=~"True", kind=~"Kustomization|HelmRelease"})  
+
+Time spent reconciling:  
+gotk_reconcile_duration_seconds_bucket{kind, name, namespace, le}  
+gotk_reconcile_duration_seconds_sum{kind, name, namespace}  
+gotk_reconcile_duration_seconds_count{kind, name, namespace}  
+
+e.g. average reconciliation:  
+sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~"default|flux-system", kind=~"Kustomization|HelmRelease"}[5m])) by (kind)  
