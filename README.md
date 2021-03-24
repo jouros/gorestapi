@@ -832,15 +832,24 @@ Ready status metrics: gotk_reconcile_condition{kind, name, namespace, type="Read
 status can be: True, False, Unknown or deleted.  
 
 e.g. number of deployments:  
+
+```plaintext:
 sum(gotk_reconcile_condition{namespace=~"default|flux-system", type="Ready", status=~"True", kind=~"Kustomization|HelmRelease"})  
+```
 
 Time spent reconciling:  
+
+```plaintext:
 gotk_reconcile_duration_seconds_bucket{kind, name, namespace, le}  
 gotk_reconcile_duration_seconds_sum{kind, name, namespace}  
 gotk_reconcile_duration_seconds_count{kind, name, namespace}  
+```
 
 e.g. average reconciliation:  
+
+```plaintext:
 sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~"default|flux-system", kind=~"Kustomization|HelmRelease"}[5m])) by (kind)  
+```
 
 ## Flux with Mozilla SOPS
 
