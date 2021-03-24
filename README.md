@@ -657,10 +657,6 @@ kubectl get service/falco -o=jsonpath={.spec.clusterIP} -n falco
 For falco we need to set below setting for /etc/kubernetes/manifests/:
 --audit-webhook-config-file=/etc/kubernetes/webhook-config.yaml  
 
-## Manage Kubernetes secrets with SOPS
-
-To be continued...  
-
 ## Kubernetes GitOps with Flux v2
 
 First I'll install hub which is a wrapper around git. It's not needed for Flux, so you can skip this step, I installed hub just because we are doing git stuff here with Flux:  
