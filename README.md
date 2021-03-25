@@ -849,4 +849,107 @@ sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~"default|flux-system", k
 
 ## Flux with Mozilla SOPS
 
-To be continued...  
+My host:  
+sudo dpkg --print-architecture
+amd64
+
+Download sops:  
+curl -OL <https://github.com/mozilla/sops/releases/download/v3.7.0/sops_3.7.0_amd64.deb>  
+
+I have these kay - value- pairs:  
+first=1
+second=2
+third=3
+
+From which I create configmap:  
+kubectl create configmap busyboxdata --from-file data.txt --dry-run -o yaml > busybox-configmap.yaml  
+
+Now I have: flux-test/apps/kustomize/test1/busybox/busybox-configmap.yaml  
+
+```plaintext:
+apiVersion: v1
+data:
+  data.txt: |
+    first=1
+    second=2
+    third=3
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: busyboxdata
+```
+
+I'll add this config to above dir:  
+
+```plaintext:
+cat <<EOF > ./.sops.yaml
+creation_rules:
+  - path_regex: .*.yaml
+    encrypted_regex: ^(data|stringData)$
+    pgp: ${KEY_FP}
+EOF
+```
+
+.sops.yaml:  
+If your secrets are stored under a specific directory, like a git repository, you can create a .sops.yaml configuration file at the root directory to define which keys are used for which filename.  
+
+To exclude above .sops.yaml from Flux, I add below to root of repo:  
+touch .sourceignore  
+echo '**/.sops.yaml' >> .sourceignore  
+
+Encrypt:  
+sops --encrypt --in-place busybox-configmap.yaml  
+
+After above step busybox-configmap.yaml will look like this:  
+
+```plaintext:
+apiVersion: v1
+data:
+    data.txt: ENC[AES256_GCM,data:suNQHWl4BnerkRQx9WzoudPnq6Lul4N07A==,iv:sjhnKe51HlGXQ3keO7CSvUY+dDssPtJgt8Ug0j4fFa0=,tag:en7WIqGBKJJS6H7wHfLpug==,type:str]
+kind: ConfigMap
+metadata:
+    creationTimestamp: null
+    name: busyboxdata
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age: []
+    lastmodified: "2021-03-25T16:36:22Z"
+    mac: ENC[AES256_GCM,data:g6A0NQrL5+qAdHFySsUUG0W5P9Se7MqFaPThLhIX4u8UrAOyxxXQc0Keh/r/sVLBN/OBH3L276ywhK7o1UvK0z1zwvhdsbLsLHRDpaptAviF9ePxAbTp2U2RQJXgkxN9cbDboBUNxtl0sfu/8EZtltMVr7on2Kwnal7JTFAj1M0=,iv:A82AL4+GCQuWnYminGNeELjLW1BlXifPQ/+BqAAr5WY=,tag:I3do9vEcFwCid8huOqzhPw==,type:str]
+    pgp:
+        - created_at: "2021-03-25T16:36:22Z"
+          enc: |
+            -----BEGIN PGP MESSAGE-----
+
+            hQIMAx/ZFgZfXuJNAQ//a6Soh/F6mEoxwW8jcVy4NxZUXW/aQJ16uNQur8xkuuHN
+            AH15urUTBd8xN+3zQTuM0jun10G8cGOcdA0yBGeEQe8Axsh/ZNYkwijj2LjTpk8k
+            7PGlSKALqZsOJ6hKl9VEOQ3+h1LBG6gFh4s916e/AYXXGd8pYi0kJiRGDclkt8U0
+            4BotCNlaQ1BE67223SX9rjdVEAbs1lMgL/37+J3AEnIN12FdovOeXKxsHxtpEP2A
+            a3uKeWGMW5FDPH9udTmlDiW5ekVRMAOggc7Ihtd74P5IwnSdbEZsZom0q49jv6/7
+            VZ+IYKIpTpnfevgfEFmSDxOODGTp2X5btP+51jSvVl/CNKrWYCVvBudhHRuB3uHT
+            vUp41n2hRznyq9dph9x3TEobaGwj3jokl+jwa6vc7DoeNHfPWsA2yyH5TavJinxP
+            pufACD0XCfrL9+79yEWVt/IZDgIVupxjSIEz5+ID275Mx/5/XpHDwHlhTX/gXR0a
+            Fssj6rm/1C4VJftZfFIkMOm1I/MoHUim1Syu/BL4j0WemZ+uI+RJVaxxzx0Q6Tyl
+            EQHf3ZlK/Nzu4SqMiS4If7vwyYhRmZ6vMK9pHzObv1Zjbd5edueydD4tEzJoAA2r
+            hHiPBIRkqLjYFdjmkm2DnzS0y+fFHdUoOi6hbRkPH5V4ULa/ThBEy/SzOWY89ADS
+            XAElbOOdk5J5hImU+ZFS1zQLeOasf4Nwdbnd1jKG+aWBzlD8iUnsa2BpRqsGollj
+            1kkZthi89CiQ7iknAWo5Yez0Y65p8IF0IPJ8XW46KP0jDbpjxQBHSFUu6g18
+            =MW5w
+            -----END PGP MESSAGE-----
+          fp: 041173C69061E4F841DD8E080650CAE18738112D
+    encrypted_regex: ^(data|stringData)$
+    version: 3.7.0
+```
+
+I installed sops-gpg secret that contains gpg key with this:  
+
+```plaintext:
+gpg --export-secret-keys --armor "${KEY_FP}" |
+kubectl create secret generic sops-gpg \
+--namespace=flux-system \
+--from-file=sops.asc=/dev/stdin
+```
+
+Now I have gpg key deployed to cluster and encrypted configmap with that same key.  
