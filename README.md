@@ -856,7 +856,7 @@ amd64
 Download sops:  
 curl -OL <https://github.com/mozilla/sops/releases/download/v3.7.0/sops_3.7.0_amd64.deb>  
 
-I have these kay - value- pairs:  
+I have these key - value- pairs:  
 first=1
 second=2
 third=3
@@ -1009,7 +1009,7 @@ Next I'll combine sops encrypted configmap with helm deployment. First I'll dele
 flux delete kustomization busyboxconfigmap  
 flux delete helmrelease busybox  
 
-I deloyed this config to Git repo and removed previous deployments:  
+I deployed this config to Git repo and removed previous deployments:  
 
 ```plaintext:
 apiVersion: v1
