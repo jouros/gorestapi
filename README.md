@@ -1009,7 +1009,7 @@ Next I'll combine sops encrypted configmap with helm deployment. First I'll dele
 flux delete kustomization busyboxconfigmap  
 flux delete helmrelease busybox  
 
-I deloyed this config to Git repo and reoved previous deployments:  
+I deloyed this config to Git repo and removed previous deployments:  
 
 ```plaintext:
 apiVersion: v1
