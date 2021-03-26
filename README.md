@@ -943,7 +943,7 @@ sops:
     version: 3.7.0
 ```
 
-I installed sops-gpg secret that contains gpg key with this:  
+I installed sops-gpg secret with pgp key into flux-system namespace:  
 
 ```plaintext:
 gpg --export-secret-keys --armor "${KEY_FP}" |
@@ -952,4 +952,116 @@ kubectl create secret generic sops-gpg \
 --from-file=sops.asc=/dev/stdin
 ```
 
-Now I have gpg key deployed to cluster and encrypted configmap with that same key.  
+I already have flux git source setup with name 'podinfo' which points to flux-test repo, so I need to deploy configmap and push it to git repo:  
+
+```plaintext:
+flux create kustomization busyboxconfigmap \
+  --source=podinfo \
+  --path="./apps/kustomize/test1/busybox" \
+  --prune=true \
+  --validation=client \
+  --interval=5m \
+  --decryption-provider=sops \
+  --decryption-secret=sops-gpg \
+  --export > ./clusters/test1/busyboxconfigmap-kustomization.yaml
+```
+
+Check:  
+kubectl get cm busyboxdata  
+NAME          DATA   AGE  
+busyboxdata   1      36m  
+
+Previously I deployed busybox helm deployment into flux-system namspace, now I will update config to change namespace into default. In my previous deployment I did not export config to, which I will do this time:  
+
+```plaintext:
+flux create hr busybox \
+    --interval=10m \
+    --source=GitRepository/podinfo \
+    --chart=./apps/base/charts/busybox/ \
+    --target-namespace=default \
+    --export > ./clusters/test1/busybox-helm.yaml
+```
+
+Above will create:  
+
+```plaintext:
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: busybox
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: ./apps/base/charts/busybox/
+      sourceRef:
+        kind: GitRepository
+        name: podinfo
+  interval: 10m0s
+  targetNamespace: default
+```
+
+Next I'll push configs to Git repo and watch new flux deployment to be deployed into default namespace. New deployment does not remove old deployment in different namespace:  
+helm uninstall busybox -n flux-system  
+
+Next I'll combine sops encrypted configmap with helm deployment. First I'll delete previous deployments:  
+flux delete kustomization busyboxconfigmap  
+flux delete helmrelease busybox  
+
+I deloyed this config to Git repo and reoved previous deployments:  
+
+```plaintext:
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: busybox
+spec: {}
+status: {}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: busyboxconfigmap
+  namespace: flux-system 
+spec:
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
+  interval: 5m0s
+  targetNamespace: busybox
+  path: ./apps/kustomize/test1/busybox
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: podinfo
+  validation: client
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: busybox
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: ./apps/base/charts/busybox/
+      sourceRef:
+        kind: GitRepository
+        name: podinfo
+  interval: 10m0s
+  targetNamespace: busybox 
+  values:
+    valuesFrom:
+      - kind: ConfigMap
+        name: busyboxconfigmap
+        valuesKey: data.txt
+```
+
+Above config will:  
+
+* create new namespace 'busybox'
+* decrypt and deploy configmap 'busyboxconfigmap'
+* deploy helm release 'busybox'
