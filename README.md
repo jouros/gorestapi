@@ -817,11 +817,14 @@ Release "prometheus-stack" has been upgraded. Happy Helming!
 Add gotk-monitoring.yaml to flux-test/clusters/test1/flux-system/ and push to repo. Check podMonitors:  
 
 kubectl get podMonitors -n monitoring  
+
+```plaintext:
 NAME                      AGE  
 helm-controller           49s  
 kustomize-controller      49s  
 notification-controller   49s  
 source-controller         49s  
+```
 
 What metrics we can get:  
 Ready status metrics: gotk_reconcile_condition{kind, name, namespace, type="Ready", status="True"}  
