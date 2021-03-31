@@ -1077,12 +1077,13 @@ For cluster 'test2' I will create complete setup for my Go restapi platform:
 * deploy flux
 * deloy krew
 * deploy sops
-* deloy helm  
-* deploy MetalLB loadbalancer  
-* deploy haproxy ingress  
-* deploy postgres Pod  
-* deploy gorestapi application Pod  
-* deploy Prometheus  
+* deloy helm
+* deloy node labels
+* deploy MetalLB loadbalancer
+* deploy haproxy ingress
+* deploy postgres Pod
+* deploy gorestapi application Pod
+* deploy Prometheus
 * deploy haproxy-fix
 
 ## Kubernetes disaster recovery, how to re-install cluster
