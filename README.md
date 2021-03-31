@@ -962,7 +962,7 @@ kubectl create secret generic sops-gpg \
 
 I already have flux git source setup with name 'podinfo' which points to flux-test repo, so I need push it to git repo.
 
-Next I'll set up busybox values.yaml with some default environment values which I will overwrite with Configmap values:  
+Next I'll setup busybox values.yaml with some default environment values which I will overwrite with Configmap values:  
 
 ```plaintext:
 env:
@@ -972,6 +972,18 @@ env:
   value2: "6"
   name3: third
   value3: "7"
+```
+
+busybox templates/deployment.yaml setup:  
+
+```plaintext:
+     env:
+          - name: {{ .Values.env.name1 }} 
+            value: {{ .Values.env.value1 | quote }} 
+          - name: {{  .Values.env.name2 }} 
+            value: {{ .Values.env.value2 | quote }} 
+          - name: {{ .Values.env.name3 }}
+            value: {{ .Values.env.value3 | quote }}
 ```
 
 Complete busybox helmrelease config:  
