@@ -850,7 +850,7 @@ sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~"default|flux-system", k
 ## Flux with Mozilla SOPS
 
 My host:  
-sudo dpkg --print-architecture
+sudo dpkg --print-architecture  
 amd64
 
 Download sops:  
