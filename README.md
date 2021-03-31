@@ -974,7 +974,7 @@ env:
   value3: "7"
 ```
 
-Complete busybox helrelease config:  
+Complete busybox helmrelease config:  
 
 ```plaintext:
 apiVersion: v1
