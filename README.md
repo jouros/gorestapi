@@ -856,10 +856,14 @@ amd64
 Download sops:  
 curl -OL <https://github.com/mozilla/sops/releases/download/v3.7.0/sops_3.7.0_amd64.deb>  
 
-I have these key - value- pairs:  
-first=1
-second=2
-third=3
+My test plan is to have sops encrypted Configmap which will overwrite default environment values from my busybox helm chart. I have data.txt values:  
+env:
+  name1: first
+  value1: "1"
+  name2: second
+  value2: "2"
+  name3: third
+  value3: "3"
 
 From which I create configmap:  
 kubectl create configmap busyboxdata --from-file data.txt --dry-run -o yaml > busybox-configmap.yaml  
@@ -870,9 +874,13 @@ Now I have: flux-test/apps/kustomize/test1/busybox/busybox-configmap.yaml
 apiVersion: v1
 data:
   data.txt: |
-    first=1
-    second=2
-    third=3
+    env:
+      name1: first
+      value1: "1"
+      name2: second
+      value2: "2"
+      name3: third
+      value3: "3"
 kind: ConfigMap
 metadata:
   creationTimestamp: null
@@ -952,64 +960,21 @@ kubectl create secret generic sops-gpg \
 --from-file=sops.asc=/dev/stdin
 ```
 
-I already have flux git source setup with name 'podinfo' which points to flux-test repo, so I need to deploy configmap and push it to git repo:  
+I already have flux git source setup with name 'podinfo' which points to flux-test repo, so I need push it to git repo.
+
+Next I'll set up busybox values.yaml with some default environment values which I will overwrite with Configmap values:  
 
 ```plaintext:
-flux create kustomization busyboxconfigmap \
-  --source=podinfo \
-  --path="./apps/kustomize/test1/busybox" \
-  --prune=true \
-  --validation=client \
-  --interval=5m \
-  --decryption-provider=sops \
-  --decryption-secret=sops-gpg \
-  --export > ./clusters/test1/busyboxconfigmap-kustomization.yaml
+env:
+  name1: first
+  value1: "5"
+  name2: second
+  value2: "6"
+  name3: third
+  value3: "7"
 ```
 
-Check:  
-kubectl get cm busyboxdata  
-NAME          DATA   AGE  
-busyboxdata   1      36m  
-
-Previously I deployed busybox helm deployment into flux-system namspace, now I will update config to change namespace into default. In my previous deployment I did not export config to, which I will do this time:  
-
-```plaintext:
-flux create hr busybox \
-    --interval=10m \
-    --source=GitRepository/podinfo \
-    --chart=./apps/base/charts/busybox/ \
-    --target-namespace=default \
-    --export > ./clusters/test1/busybox-helm.yaml
-```
-
-Above will create:  
-
-```plaintext:
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: busybox
-  namespace: flux-system
-spec:
-  chart:
-    spec:
-      chart: ./apps/base/charts/busybox/
-      sourceRef:
-        kind: GitRepository
-        name: podinfo
-  interval: 10m0s
-  targetNamespace: default
-```
-
-Next I'll push configs to Git repo and watch new flux deployment to be deployed into default namespace. New deployment does not remove old deployment in different namespace:  
-helm uninstall busybox -n flux-system  
-
-Next I'll combine sops encrypted configmap with helm deployment. First I'll delete previous deployments:  
-flux delete kustomization busyboxconfigmap  
-flux delete helmrelease busybox  
-
-I deployed this config to Git repo and removed previous deployments:  
+Complete busybox helrelease config:  
 
 ```plaintext:
 apiVersion: v1
@@ -1031,9 +996,9 @@ spec:
     secretRef:
       name: sops-gpg
   interval: 5m0s
-  targetNamespace: busybox
   path: ./apps/kustomize/test1/busybox
   prune: true
+  targetNamespace: flux-system
   sourceRef:
     kind: GitRepository
     name: podinfo
@@ -1045,23 +1010,24 @@ metadata:
   name: busybox
   namespace: flux-system
 spec:
+  interval: 10m0s
   chart:
     spec:
       chart: ./apps/base/charts/busybox/
       sourceRef:
         kind: GitRepository
         name: podinfo
-  interval: 10m0s
+      interval: 1m0s
   targetNamespace: busybox 
-  values:
-    valuesFrom:
-      - kind: ConfigMap
-        name: busyboxconfigmap
-        valuesKey: data.txt
+  valuesFrom:
+    - kind: ConfigMap
+      name: busyboxdata
+      valuesKey: data.txt
 ```
 
 Above config will:  
 
 * create new namespace 'busybox'
-* decrypt and deploy configmap 'busyboxconfigmap'
+* decrypt and deploy configmap 'busyboxdata' into flux-system namespace
 * deploy helm release 'busybox'
+* get overwite values from configmap
