@@ -857,6 +857,8 @@ Download sops:
 curl -OL <https://github.com/mozilla/sops/releases/download/v3.7.0/sops_3.7.0_amd64.deb>  
 
 My test plan is to have sops encrypted Configmap which will overwrite default environment values from my busybox helm chart. I have data.txt values:  
+
+```plaintext:
 env:
   name1: first
   value1: "1"
@@ -864,6 +866,7 @@ env:
   value2: "2"
   name3: third
   value3: "3"
+```
 
 From which I create configmap:  
 kubectl create configmap busyboxdata --from-file data.txt --dry-run -o yaml > busybox-configmap.yaml  
