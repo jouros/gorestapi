@@ -1094,4 +1094,4 @@ My complete repo structure:
 └── README.md
 ```
 
-I have completed setup only for cluster 'test1' which has two apps: 1) podinfo with kustomize and 2) busybox with sops and helm. Similar way I could define more different type of clusters with custom differences into test2 and so on.  
+I have completed setup only for cluster 'test1' which has two apps: 1) podinfo with kustomize and 2) busybox with sops and custom helm charts. Similar way I could define more different type of clusters with custom differences into test2 and so on.  
