@@ -1044,5 +1044,5 @@ Above config will:
 
 * create new namespace 'busybox'
 * decrypt and deploy configmap 'busyboxdata' into flux-system namespace
-* deploy helm release 'busybox'
+* deploy my custom helm release 'busybox'
 * get overwite values from configmap
