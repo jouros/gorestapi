@@ -1072,6 +1072,8 @@ My complete repo structure:
 
 I have completed setup only for cluster 'test1' which has two apps: 1) podinfo with kustomize and 2) busybox with sops and custom helm charts. Similar way I could define more different type of clusters test2, test3 and so on.  
 
+## GitOps infrastructure automation with Ansible and Flux
+
 For cluster 'test2' I will create complete setup for my Go restapi platform:  
 
 * deploy flux
@@ -1081,10 +1083,9 @@ For cluster 'test2' I will create complete setup for my Go restapi platform:
 * deloy node labels
 * deploy MetalLB loadbalancer
 * deploy haproxy ingress
-* deploy postgres Pod
-* deploy gorestapi application Pod
 * deploy Prometheus
 * deploy haproxy-fix
+* deploy application layer: postgres and gorestapi Pods
 
 ## Kubernetes disaster recovery, how to re-install cluster state
 
