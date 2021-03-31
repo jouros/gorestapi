@@ -1086,7 +1086,7 @@ For cluster 'test2' I will create complete setup for my Go restapi platform:
 * deploy Prometheus
 * deploy haproxy-fix
 
-## Kubernetes disaster recovery, how to re-install cluster
+## Kubernetes disaster recovery, how to re-install cluster state
 
 If things get badly wrong, sometimes fastest way back is to re-install cluster state.  
 
