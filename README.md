@@ -847,7 +847,7 @@ e.g. average reconciliation:
 sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~"default|flux-system", kind=~"Kustomization|HelmRelease"}[5m])) by (kind)  
 ```
 
-## Flux with Mozilla SOPS
+## Flux with Mozilla SOPS and Helm
 
 My host:  
 sudo dpkg --print-architecture  
