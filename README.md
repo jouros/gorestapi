@@ -600,7 +600,6 @@ kubectl logs -f kube-apiserver-master1 -n kube-system
 
 Repository audit-policy.yaml is just a starting point which you can use to define what events to wan't to be logged and what are just continuous high volume events.  
 
-
 ## Deploy Falco security
 
 Note! I have issues with kube-apiserver, so falco deployment is still under development  
