@@ -600,32 +600,6 @@ kubectl logs -f kube-apiserver-master1 -n kube-system
 
 Repository audit-policy.yaml is just a starting point which you can use to define what events to wan't to be logged and what are just continuous high volume events.  
 
-## Kubernetes disaster recovery, how to re-install cluster
-
-If things get badly wrong, sometimes fastest way back is to re-install cluster state.  
-
-kubeadm reset: clean up files that were created by kubeadm init or join. When executed in control-plane node, wipes out all info from previous cluster and print out join info to new cluster.  
-
-kubeadm init: Initailize new cluster state. New config files will be created.  
-
-kebeadm join: You have to re-join all worker nodes by executing kudeadm reset + kubeadm join.  
-
-In my setup I did reset on all nodes, kubeadm init on control-plane and join on worker nodes. I also had to execute some additional commands in every node:  
-cat <<EOF | sudo tee /etc/modules-load.d/crio.conf
-overlay
-br_netfilter
-EOF
-
-sudo modprobe overlay
-sudo modprobe br_netfilter
-
-All labels are wiped out, so I had to re-label my cluster nodes for haproxy-ingress.  
-
-I got this error: "failed to set bridge addr: "cni0" already has an IP address" for some starting Pod. I executed below commands in every node:  
-sudo ip link set cni0 down  
-sudo brctl delbr cni0  
-
-Finally I rebooted control-plane node and cluster was back in business.  
 
 ## Deploy Falco security
 
@@ -1098,3 +1072,30 @@ My complete repo structure:
 ```
 
 I have completed setup only for cluster 'test1' which has two apps: 1) podinfo with kustomize and 2) busybox with sops and custom helm charts. Similar way I could define more different type of clusters test2, test3 and so on.  
+
+## Kubernetes disaster recovery, how to re-install cluster
+
+If things get badly wrong, sometimes fastest way back is to re-install cluster state.  
+
+kubeadm reset: clean up files that were created by kubeadm init or join. When executed in control-plane node, wipes out all info from previous cluster and print out join info to new cluster.  
+
+kubeadm init: Initailize new cluster state. New config files will be created.  
+
+kebeadm join: You have to re-join all worker nodes by executing kudeadm reset + kubeadm join.  
+
+In my setup I did reset on all nodes, kubeadm init on control-plane and join on worker nodes. I also had to execute some additional commands in every node:  
+cat <<EOF | sudo tee /etc/modules-load.d/crio.conf
+overlay
+br_netfilter
+EOF
+
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+All labels are wiped out, so I had to re-label my cluster nodes for haproxy-ingress.  
+
+I got this error: "failed to set bridge addr: "cni0" already has an IP address" for some starting Pod. I executed below commands in every node:  
+sudo ip link set cni0 down  
+sudo brctl delbr cni0  
+
+Finally I rebooted control-plane node and cluster was back in business.  
