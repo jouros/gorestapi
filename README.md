@@ -1046,3 +1046,52 @@ Above config will:
 * decrypt and deploy configmap 'busyboxdata' into flux-system namespace
 * deploy my custom helm release 'busybox' into busybox namespace
 * get helm deployment overwite values from configmap 'busyboxdata' which will replace values from values.yaml
+
+My complete repo structure:  
+
+```plaintext:
+.
+├── apps
+│   ├── base
+│   │   ├── charts
+│   │   │   └── busybox
+│   │   │       ├── charts
+│   │   │       ├── Chart.yaml
+│   │   │       ├── templates
+│   │   │       │   ├── deployment.yaml
+│   │   │       │   ├── _helpers.tpl
+│   │   │       │   ├── hpa.yaml
+│   │   │       │   ├── NOTES.txt
+│   │   │       │   ├── service.yaml
+│   │   │       │   └── tests
+│   │   │       │       └── test-connection.yaml
+│   │   │       └── values.yaml
+│   │   └── podinfo
+│   │       ├── deployment.yaml
+│   │       ├── hpa.yaml
+│   │       ├── kustomization.yaml
+│   │       └── service.yaml
+│   └── kustomize
+│       ├── test1
+│       │   ├── busybox
+│       │   │   ├── busybox-configmap.yaml
+│       │   │   └── data.txt
+│       │   └── podinfo
+│       │       ├── hpa.yaml
+│       │       └── kustomization.yaml
+│       └── test2
+├── clusters
+│   ├── test1
+│   │   ├── apps1-kustomization.yaml
+│   │   ├── busybox-helm.yaml
+│   │   ├── flux-system
+│   │   │   ├── gotk-components.yaml
+│   │   │   ├── gotk-monitoring.yaml
+│   │   │   ├── gotk-sync.yaml
+│   │   │   └── kustomization.yaml
+│   │   └── test1-source.yaml
+│   └── test2
+└── README.md
+```
+
+I have completed setup only for cluster 'test1' which will have two apps: 1) podinfo with kustomize and 2) busybox with sops and helm. Similar way I could define more different type of clusters with custom differences into test2 and so on.  
