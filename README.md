@@ -1072,6 +1072,19 @@ My complete repo structure:
 
 I have completed setup only for cluster 'test1' which has two apps: 1) podinfo with kustomize and 2) busybox with sops and custom helm charts. Similar way I could define more different type of clusters test2, test3 and so on.  
 
+For cluster 'test2' I will create complete setup for my Go restapi platform:  
+
+* deploy flux
+* deloy krew
+* deploy sops
+* deloy helm  
+* deploy MetalLB loadbalancer  
+* deploy haproxy ingress  
+* deploy postgres Pod  
+* deploy gorestapi application Pod  
+* deploy Prometheus  
+* deploy haproxy-fix
+
 ## Kubernetes disaster recovery, how to re-install cluster
 
 If things get badly wrong, sometimes fastest way back is to re-install cluster state.  
