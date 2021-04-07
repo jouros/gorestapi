@@ -1,0 +1,9 @@
+---
+- name: Cluster Pod deployment
+  hosts: master*
+  gather_facts: yes 
+  become: no
+  roles:
+    - { role: setup, tags: ['setup'] } 
+    - { role: flux, tags: ['flux'] }
+...

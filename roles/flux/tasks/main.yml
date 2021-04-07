@@ -1,0 +1,64 @@
+---
+# tasks file for flux deployment
+- name: Get GITHUB_TOKEN env variables
+  shell:
+    cmd: |
+      cat ~{{ console_user | default(ansible_user) }}/.config/hub | grep token | awk '{print $2}'
+  args:
+    executable: /bin/bash
+  register: github_token
+
+- debug:
+    msg: "github_token: {{ github_token.stdout }}"
+
+- name: Get GITHUB_USER env variable
+  shell:
+    cmd: |
+      cat ~{{ console_user | default(ansible_user) }}/.config/hub | grep user | awk '{print $3}'
+  args:
+    executable: /bin/bash
+  register: github_user
+
+- debug:
+    msg: "github_user: {{ github_user.stdout }}"
+
+- name: Edit profile
+  blockinfile:
+    dest: "~{{  console_user | default(ansible_user) }}/.profile"
+    block: |
+      export GITHUB_TOKEN={{ github_token.stdout }}
+      export GITHUB_USER={{ github_user.stdout }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK token"
+
+- name: Create Flux dir
+  file:
+    path: "~{{ console_user | default(ansible_user) }}/Flux"
+    state: directory
+    mode: '0755'
+
+- name: Download flux
+  get_url: 
+    url: https://toolkit.fluxcd.io/install.sh
+    dest: "~{{ console_user | default(ansible_user) }}/Flux/install.sh"
+    force: yes
+    mode: '0755'
+    owner: joro
+    checksum: md5:fe84646961754aa99edd724783cd64ab
+
+- name: Install flux bin
+  command: "~{{ console_user | default(ansible_user) }}/Flux/install.sh"
+  become: true
+
+- name: Bootstrap flux with git repo flux-test and cluster test2
+  shell:
+    cmd: |
+      flux bootstrap github \
+      --owner=$GITHUB_USER \
+      --repository=flux-test \
+      --branch=main \
+      --private=false \
+      --path=./clusters/test2
+  environment:
+    GITHUB_USER: '{{ github_user.stdout }}'
+    GITHUB_TOKEN: '{{ github_token.stdout }}'
+...

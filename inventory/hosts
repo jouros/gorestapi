@@ -1,0 +1,6 @@
+[kube] 
+master11 ansible_host=10.0.1.220 ansible_port=22
+worker11 ansible_host=10.0.1.130 ansible_port=22
+worker22 ansible_host=10.0.1.117 ansible_port=22
+worker33 ansible_host=10.0.1.9 ansible_port=22
+worker44 ansible_host=10.0.1.84 ansible_port=22
